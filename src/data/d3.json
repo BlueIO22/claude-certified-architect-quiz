@@ -1,0 +1,242 @@
+[
+  {
+    "id": "d3-01",
+    "domain": 3,
+    "task": "3.1",
+    "scenario": "Code Generation with Claude Code",
+    "question": "A new team member on a remote team can't see project coding standards even though they've cloned the repo. The seniors can see them fine. The standards are in ~/.claude/CLAUDE.md on the lead engineer's machine. What's the most effective fix?",
+    "options": [
+      "Move standards to .claude/CLAUDE.md or root CLAUDE.md in the repository so they version control and appear for all team members",
+      "Update the new team member's ~/.claude/CLAUDE.md to match the lead engineer's, ensuring identical user-level instructions",
+      "Have the lead engineer send the ~/.claude/CLAUDE.md file via Slack for the new team member to manually copy",
+      "Create a project-scoped CLAUDE.md that @imports each developer's personal ~/.claude/CLAUDE.md files"
+    ],
+    "correct": [
+      0
+    ],
+    "explanation": "User-level settings (~/.claude/CLAUDE.md) are not shared via version control and only apply to that user. To share standards with the entire team, place them in project-level configuration (.claude/CLAUDE.md or root CLAUDE.md) so they're committed and available when teammates clone the repo. Option 2 requires manual synchronization which doesn't scale. Option 3 is not sustainable. Option 4 misunderstands @import's purpose."
+  },
+  {
+    "id": "d3-02",
+    "domain": 3,
+    "task": "3.1",
+    "scenario": "Code Generation with Claude Code",
+    "question": "Your project has distinct areas with different coding standards: React components follow one convention, Django API handlers follow another, database models follow a repository pattern. You want one unified CLAUDE.md that stays maintainable as standards evolve. Which approach best achieves this?",
+    "options": [
+      "Create one large CLAUDE.md file with sections for each area, relying on clear headers so Claude infers which section applies",
+      "Use @import syntax to reference separate standards files (e.g., react-conventions.md, api-conventions.md) in a modular .claude/ structure",
+      "Create separate CLAUDE.md files in each subdirectory (src/components/CLAUDE.md, src/api/CLAUDE.md)",
+      "Use .claude/rules/ to define glob patterns, one rule file per area with YAML frontmatter specifying directories"
+    ],
+    "correct": [
+      1
+    ],
+    "explanation": "@import allows you to keep CLAUDE.md modular by referencing external standards files, making it easier to maintain and evolve standards independently. Option 1 requires manual header parsing and is difficult to maintain. Option 3 doesn't scale to standards spanning multiple directories. Option 4 is better for path-specific conditional rules, not for organizing a unified standards document."
+  },
+  {
+    "id": "d3-03",
+    "domain": 3,
+    "task": "3.2",
+    "scenario": "Developer Productivity with Claude",
+    "question": "Your team wants a /refactor slash command that guides developers through safe refactoring. You need it available to everyone on the team via their cloned repo, not just your local machine. Where should you create this command?",
+    "options": [
+      "In ~/.claude/commands/ so it's personalized for each developer's workflow",
+      "In the local /commands directory at the project root",
+      "In .claude/commands/ within the project repository for version control and team-wide sharing",
+      "As a project skill in .claude/skills/ with frontmatter configuration"
+    ],
+    "correct": [
+      2
+    ],
+    "explanation": "Project-scoped commands in .claude/commands/ are version-controlled and automatically available to all developers when they clone the repo. Option 1 is for personal/experimental commands not shared with the team. Option 2 doesn't match Claude Code's conventions. Option 4 could work as a skill, but commands and skills serve different purposes—commands are slash-invoked directly without manual invocation."
+  },
+  {
+    "id": "d3-04",
+    "domain": 3,
+    "task": "3.2",
+    "scenario": "Developer Productivity with Claude",
+    "question": "You create a /codebase-survey skill that exhaustively explores an unfamiliar repository, generating very verbose output (discovery logs, file traversals, pattern analysis) that fills your conversation context. You need this discovery for architectural decisions but don't want verbose output pollution in the main session. How should you configure the skill?",
+    "options": [
+      "Set context: fork in the SKILL.md frontmatter so the skill runs in an isolated subagent context and returns only the summary",
+      "Use allowed-tools: [\"Read\", \"Grep\", \"Glob\"] to restrict tool access and reduce output volume",
+      "Add argument-hint to the frontmatter to prompt developers for filtering parameters before the skill runs",
+      "Configure the skill with a --compact flag to suppress verbose logging during exploration"
+    ],
+    "correct": [
+      0
+    ],
+    "explanation": "The context: fork frontmatter option runs the skill in an isolated subagent context, preventing verbose discovery output from polluting the main conversation while allowing thorough exploration with only a summary returned to the main session. Option 2 restricts tools but doesn't isolate output. Option 3 prompts for input without solving pollution. Option 4 references a session feature, not a skill configuration option."
+  },
+  {
+    "id": "d3-05",
+    "domain": 3,
+    "task": "3.3",
+    "scenario": "Code Generation with Claude Code",
+    "question": "Your codebase has test files spread throughout multiple directories (tests/unit/ButtonTest.tsx, src/components/Button.test.tsx, backend/tests/models_test.py). You want all test files to follow unified conventions regardless of location, but creating CLAUDE.md files in every directory is impractical. What's most maintainable?",
+    "options": [
+      "Create a rule file in .claude/rules/ with YAML frontmatter containing glob patterns like paths: [\"**/*.test.*\", \"**/*_test.*\", \"**/tests/**/*\"]",
+      "Create a single large CLAUDE.md with a 'Testing' section and rely on Claude to detect test files",
+      "Create individual CLAUDE.md files in each directory containing test files",
+      "Use @import in the root CLAUDE.md to reference testing.md, then repeat that @import in every directory's CLAUDE.md"
+    ],
+    "correct": [
+      0
+    ],
+    "explanation": ".claude/rules/ with YAML frontmatter glob patterns allows conventions to apply based on file paths, automatically loading when any matching test file is edited. Option 2 relies on inference which is unreliable. Option 3 doesn't scale. Option 4 requires manual repetition in multiple CLAUDE.md files."
+  },
+  {
+    "id": "d3-06",
+    "domain": 3,
+    "task": "3.3",
+    "scenario": "Code Generation with Claude Code",
+    "question": "You have Terraform infrastructure files in multiple locations: infrastructure/terraform/prod/, infrastructure/terraform/staging/, and scripts/terraform-helpers/. You want Terraform-specific conventions applied to all without creating multiple rule files or directory CLAUDE.md. Which glob pattern in .claude/rules/terraform.md is most effective?",
+    "options": [
+      "paths: [\"infrastructure/terraform/**/*\"]",
+      "paths: [\"**/terraform/**/*\"]",
+      "paths: [\"infrastructure/\", \"scripts/terraform-helpers/\"]",
+      "paths: [\"*.tf\", \"*.tfvars\"]"
+    ],
+    "correct": [
+      1
+    ],
+    "explanation": "The glob pattern **/terraform/**/* matches terraform directories at any depth, automatically applying conventions to files in prod, staging, and scripts/terraform-helpers/. Option 1 only matches infrastructure/terraform. Option 3 lists directories but not files within them. Option 4 matches extensions but won't apply to files in the terraform directories themselves."
+  },
+  {
+    "id": "d3-07",
+    "domain": 3,
+    "task": "3.4",
+    "scenario": "Code Generation with Claude Code",
+    "question": "You're planning work for the week and deciding which tasks warrant plan mode. Which of the following scenarios are best suited for plan mode rather than direct execution? (Select TWO.)",
+    "options": [
+      "Debugging a null pointer exception with a clear stack trace pointing to one function",
+      "Refactoring a complex payment processing system used by 40+ endpoints, affecting business logic across multiple services",
+      "Adding a single validation rule to a form component based on clear product requirements",
+      "Migrating authentication from one OAuth provider to another across the entire codebase, requiring changes to 15+ files and a new configuration system",
+      "Implementing a new logging statement that calls a utility function"
+    ],
+    "correct": [
+      1,
+      3
+    ],
+    "explanation": "Plan mode is designed for complex tasks with large scope, architectural implications, and multiple valid approaches. Option 2 (payment system refactoring affecting business logic) and Option 4 (OAuth migration across the codebase) involve significant architectural impact and cross-system dependencies. Options 1, 3, and 5 are straightforward, well-scoped changes suitable for direct execution."
+  },
+  {
+    "id": "d3-08",
+    "domain": 3,
+    "task": "3.4",
+    "scenario": "Code Generation with Claude Code",
+    "question": "You're adding a new API endpoint requiring database schema changes, migration scripts, API handlers, integration tests, and client updates. The business logic is still being defined by product, and you expect clarifications as you build. Which approach should you take?",
+    "options": [
+      "Start with direct execution and iterate as clarifications arrive, adjusting implementation in place",
+      "Use plan mode first to design the API contract and data model before implementing",
+      "Use the interview pattern in plan mode to ask clarifying questions about edge cases and error handling before implementing",
+      "Split the work: use direct execution for obvious pieces (tests, client) and plan mode for ambiguous business logic"
+    ],
+    "correct": [
+      2
+    ],
+    "explanation": "The interview pattern in plan mode lets Claude ask clarifying questions about endpoint behavior before implementing, surfacing design considerations (error handling, edge cases, backward compatibility) that might otherwise be missed. Option 2 is sound but less specific. Option 1 risks implementation misalignment. Option 4 unnecessarily splits between approaches."
+  },
+  {
+    "id": "d3-09",
+    "domain": 3,
+    "task": "3.5",
+    "scenario": "Code Generation with Claude Code",
+    "question": "You ask Claude Code to 'generate a function that validates customer addresses,' but outputs are inconsistent: sometimes validating only postal codes, sometimes checking completeness, sometimes performing geography validation. None match your requirement. What's most effective?",
+    "options": [
+      "Provide 2-3 concrete input/output examples showing exactly what addresses should pass and fail validation",
+      "Write a detailed specification document explaining address validation rules for each country",
+      "Create test cases first, then ask Claude to implement code that passes them",
+      "Use the interview pattern to have Claude ask clarifying questions about requirements"
+    ],
+    "correct": [
+      0
+    ],
+    "explanation": "Concrete input/output examples are the most effective way to communicate transformation requirements when prose descriptions produce inconsistent results. 2-3 examples clarify intent better than specifications. Option 2 is too verbose. Option 3 (TDD) is complementary but doesn't solve initial inconsistency. Option 4 should follow examples."
+  },
+  {
+    "id": "d3-10",
+    "domain": 3,
+    "task": "3.5",
+    "scenario": "Code Generation with Claude Code",
+    "question": "Your team's edge-case handling is inconsistent. Generated utility functions sometimes handle nulls, sometimes silently fail, sometimes throw exceptions. You want to establish a pattern and improve consistency. What approach drives progressive improvement most effectively?",
+    "options": [
+      "Write test cases covering edge cases (nulls, empty strings, out-of-range values) first, then iterate by sharing test failures with Claude to guide fixes",
+      "Create a style guide documenting edge-case handling patterns, then ask Claude to generate functions following it",
+      "Have Claude generate multiple implementations and select the one that 'looks best'",
+      "Implement edge case handling manually as reference examples, then ask Claude to replicate the pattern"
+    ],
+    "correct": [
+      0
+    ],
+    "explanation": "Test-driven iteration—writing test suites first, then sharing failures with Claude—establishes clear success criteria and forces consistent handling across all functions. The test suite becomes a contract that all implementations must satisfy. Option 2 is helpful but lacks feedback loops. Option 3 is subjective. Option 4 requires manual work before automation."
+  },
+  {
+    "id": "d3-11",
+    "domain": 3,
+    "task": "3.6",
+    "scenario": "Claude Code for Continuous Integration",
+    "question": "Your CI/CD pipeline runs a job that analyzes pull requests for security issues using 'claude \"Check this PR for security issues\"' but hangs indefinitely, blocking the pipeline. Investigation shows Claude Code is waiting for interactive input. Which flag enables non-interactive mode?",
+    "options": [
+      "-p (or --print)",
+      "--batch",
+      "--headless",
+      "--ci-mode"
+    ],
+    "correct": [
+      0
+    ],
+    "explanation": "The -p (or --print) flag runs Claude Code in non-interactive mode, processing the prompt and outputting results to stdout without waiting for user input—exactly what CI/CD pipelines require. Options 2, 3, and 4 are either non-existent or inappropriate for automated pipeline execution."
+  },
+  {
+    "id": "d3-12",
+    "domain": 3,
+    "task": "3.6",
+    "scenario": "Claude Code for Continuous Integration",
+    "question": "Your team wants to integrate automated code review into CI/CD, posting inline PR comments from Claude's findings. Currently, Claude outputs natural language reviews requiring manual parsing to extract location and severity data for comment posting. How should you restructure?",
+    "options": [
+      "Parse Claude's natural language output with regex patterns to extract locations and severity",
+      "Use the --output-format json flag with --json-schema to enforce structured JSON output that's machine-parseable",
+      "Have Claude output structured format like 'FILE:line | SEVERITY:high | ISSUE:...', then parse with string splitting",
+      "Split into two passes: discovery first, then a second pass requesting structured JSON output"
+    ],
+    "correct": [
+      1
+    ],
+    "explanation": "Using --output-format json with --json-schema enforces structured, machine-parseable output suitable for automated PR comment posting. Option 1 is fragile and error-prone. Option 3 is a workaround avoiding proper mechanisms. Option 4 adds unnecessary overhead when --json-schema can enforce structure on the first pass."
+  },
+  {
+    "id": "d3-13",
+    "domain": 3,
+    "task": "3.6",
+    "scenario": "Claude Code for Continuous Integration",
+    "question": "A developer pushes a new commit after receiving automated code review feedback. When you re-run the review, Claude reports all findings again, including issues from the previous commit that were already addressed. PR comments now include duplicates. How do you prevent this?",
+    "options": [
+      "Include prior review findings in context when re-running, instructing Claude to report only new or still-unaddressed issues",
+      "Automatically filter out findings from previous reviews by comparing issue IDs",
+      "Have developers mark findings as 'acknowledged' before committing, then exclude those from future reviews",
+      "Run reviews only once per PR, skipping re-runs on new commits to avoid duplicates"
+    ],
+    "correct": [
+      0
+    ],
+    "explanation": "Passing prior findings in context and instructing Claude to report only new or unaddressed issues prevents duplicates while enabling iterative feedback. Option 2 requires issue tracking infrastructure. Option 3 burdens developers. Option 4 prevents catching new issues introduced in follow-up commits."
+  },
+  {
+    "id": "d3-14",
+    "domain": 3,
+    "task": "3.6",
+    "scenario": "Claude Code for Continuous Integration",
+    "question": "Your team is designing architecture for automated testing with two workflows: (1) Pre-merge checks (developers wait for <10min results, blocking); (2) Nightly comprehensive tests (overnight, next-morning review, non-blocking, 24hr latency acceptable). The Message Batches API offers 50% cost savings but up to 24-hour processing. How should you apply it?",
+    "options": [
+      "Use Batches API for pre-merge checks to maximize cost savings across all workflows",
+      "Use Batches API for nightly tests only; keep real-time API calls for pre-merge checks requiring immediate results",
+      "Use Batches API for both with status polling to detect completion within acceptable latency windows",
+      "Avoid Batches API due to unpredictable latency and use real-time API for all workflows"
+    ],
+    "correct": [
+      1
+    ],
+    "explanation": "Match API approach to workflow latency requirements. The Batches API's 50% savings are ideal for non-blocking nightly tests with 24-hour tolerance, but inappropriate for blocking pre-merge checks where developers wait for results. Option 1 reverses the correct assignment. Option 3 relies on unpredictable completion timing. Option 4 leaves cost savings on the table unnecessarily."
+  }
+]

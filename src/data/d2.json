@@ -1,0 +1,244 @@
+[
+  {
+    "id": "d2-01",
+    "domain": 2,
+    "task": "2.1",
+    "scenario": "Customer Support Resolution Agent",
+    "question": "Your agent has tools get_customer, lookup_account, and fetch_customer_profile with minimal descriptions: 'Retrieves customer information.' Production logs show the agent uses these tools inconsistently, sometimes calling all three sequentially on identical requests. What is the most effective first step to improve tool selection reliability?",
+    "options": [
+      "Add a routing classifier that analyzes requests and pre-selects the most appropriate tool before the agent runs",
+      "Expand each tool's description to include expected input formats, example queries, edge cases, and boundaries explaining when to use each versus similar tools",
+      "Add few-shot examples to the system prompt demonstrating correct tool selection across 10-15 different customer request types",
+      "Consolidate the three tools into a single get_customer_data tool that internally routes to the appropriate backend"
+    ],
+    "correct": [
+      1
+    ],
+    "explanation": "Tool descriptions are the primary mechanism LLMs use for tool selection. Minimal, identical descriptions cause misrouting and redundant calls. Expanding descriptions with concrete input formats, examples, and boundaries directly addresses the root cause with low effort. Few-shot examples (1) add token overhead without fixing the underlying ambiguity. A routing classifier (3) is over-engineered when descriptions haven't been optimized. Consolidating tools (4) is architecturally valid but requires more work than improving descriptions as a first step."
+  },
+  {
+    "id": "d2-02",
+    "domain": 2,
+    "task": "2.1",
+    "scenario": "Multi-Agent Research System",
+    "question": "Your research coordinator has tools search_academic_sources, search_news_articles, and extract_data with descriptions 'Search for information,' 'Search for information,' and 'Extract information from text.' The web search subagent frequently calls extract_data instead of search_news_articles when asked to find current news, and occasionally calls search_academic_sources when it should call extract_data. What architectural change would most reliably prevent these misrouting issues?",
+    "options": [
+      "Rename extract_data to extract_text_data, search_news_articles to find_recent_news, and search_academic_sources to find_peer_reviewed_papers, then update descriptions with source types, query requirements, and output formats for each tool",
+      "Remove search_academic_sources from the web search subagent's tool list and route academic queries back to the coordinator",
+      "Add a pre-processing step in the coordinator that parses the subagent's request and forces tool selection before the subagent makes a call",
+      "Create separate instances of Claude for academic and news search, eliminating the need for multiple tool options in a single agent"
+    ],
+    "correct": [
+      0
+    ],
+    "explanation": "Renaming tools to reflect their purpose and writing differentiated descriptions addressing input formats, output structure, and boundary conditions eliminates ambiguity at the source. This scales better than runtime enforcement. Removing tools (2) reduces flexibility unnecessarily. Pre-processing (3) bypasses the LLM's ability to reason about tool selection. Creating separate agent instances (4) is inefficient and doesn't address the real problem: unclear tool descriptions."
+  },
+  {
+    "id": "d2-03",
+    "domain": 2,
+    "task": "2.2",
+    "scenario": "Developer Productivity with Claude",
+    "question": "Your MCP tool for analyzing code repositories encounters a network timeout when fetching a remote repository. The tool currently returns: {\"status\": \"error\", \"message\": \"Operation failed\"}. The agent treats this as an unrecoverable failure and reports the error to the user. Which structured error response approach would allow the agent to make better recovery decisions?",
+    "options": [
+      "Return null and log the error server-side, ensuring the agent always receives a consistent data structure",
+      "Return {\"status\": \"error\", \"message\": \"timeout\", \"retry_after\": 5} with more specific error type details",
+      "Return {\"errorCategory\": \"transient\", \"isRetryable\": true, \"humanReadable\": \"Network timeout fetching repository. The repository may be temporarily unavailable.\", \"attemptedQuery\": \"clone <repo-url>\"}",
+      "Return the raw exception stack trace so the agent can parse it for error type"
+    ],
+    "correct": [
+      2
+    ],
+    "explanation": "Structured error metadata including errorCategory, isRetryable, and humanReadable text enables the agent to distinguish transient failures (worth retrying) from permission/validation errors (non-retryable). This metadata informs intelligent recovery strategies. Option 1 hides the error from the agent. Option 2 adds some detail but lacks the categorical structure needed for systematic recovery decisions. Option 4 exposes implementation details rather than providing actionable error semantics."
+  },
+  {
+    "id": "d2-04",
+    "domain": 2,
+    "task": "2.2",
+    "scenario": "Structured Data Extraction",
+    "question": "Your extraction pipeline calls an MCP tool that validates extracted data against a schema. When a required field is missing from the source document, the tool returns: {\"isError\": true, \"message\": \"Missing required field: invoice_date\"}. The agent immediately retries with the same document, and after three failed retries, escalates to human review. What's the correct error handling approach?",
+    "options": [
+      "Distinguish between validation errors (schema format) and business errors (missing required data), returning isRetryable: false with explanation: 'Required field not present in source document' so the agent routes to human review immediately instead of wasting retries",
+      "Increase the retry count to 5 and add exponential backoff to give the extraction model more opportunities to find the missing field",
+      "Have the MCP tool fetch additional context from related documents automatically before returning an error",
+      "Return a generic 'Schema validation failed' message and rely on the agent to interpret whether to retry"
+    ],
+    "correct": [
+      0
+    ],
+    "explanation": "The root cause is that the field is absent from the source document, not a format or structural error—no amount of retry will recover it. Returning isRetryable: false with a specific explanation enables the agent to immediately escalate rather than waste retry attempts. Increasing retries (2) won't help when the data simply isn't there. Automatic cross-document fetching (3) changes the tool's contract. Generic messages (4) prevent the agent from making informed decisions."
+  },
+  {
+    "id": "d2-05",
+    "domain": 2,
+    "task": "2.3",
+    "scenario": "Customer Support Resolution Agent",
+    "question": "Your customer support agent currently has access to 12 tools: get_customer, lookup_order, process_refund, initiate_return, check_inventory, send_notification, analyze_sentiment, schedule_callback, apply_discount, verify_payment, lookup_billing, and escalate_to_human. You observe that when customers ask about inventory availability, the agent sometimes calls get_customer or lookup_order first instead of check_inventory. What's the most effective optimization?",
+    "options": [
+      "Add few-shot examples to the system prompt for each of the 12 tools showing when each should be called",
+      "Restrict the agent's tool set to 4-5 core tools: get_customer, lookup_order, process_refund, and escalate_to_human; route specialized requests (inventory, billing analysis) back to a coordinator",
+      "Increase the model size to improve reasoning capability so it can manage all 12 tools more effectively",
+      "Create a tool_choice configuration that forces the agent to always call get_customer first, regardless of the request type"
+    ],
+    "correct": [
+      1
+    ],
+    "explanation": "Giving an agent access to too many tools degrades selection reliability by increasing decision complexity. Restricting to core tools and routing specialized tasks through a coordinator reduces misselection while maintaining capability. Few-shot examples (1) add token overhead but don't reduce inherent complexity. A larger model (3) doesn't solve the fundamental problem of decision complexity. Forcing a tool sequence (4) is inflexible and inappropriate for all request types."
+  },
+  {
+    "id": "d2-06",
+    "domain": 2,
+    "task": "2.3",
+    "scenario": "Developer Productivity with Claude",
+    "question": "You're configuring an agent to help developers explore a legacy codebase. It has access to: Grep (for content search), Glob (for file path matching), Read (for full file contents), codegraph_search (for symbol lookup), and codegraph_explore (for comprehensive code navigation). The agent frequently calls Read on every file matching a Glob pattern before analyzing them, leading to context window exhaustion. How should you configure tool_choice to improve efficiency?",
+    "options": [
+      "Set tool_choice to 'any' so the agent is forced to call a tool on every turn, reducing wandering",
+      "Use tool_choice to force codegraph_search as the first tool, ensuring the agent finds symbols by name before loading files",
+      "Remove Read from the agent's tool list and only expose Grep and Glob to prevent context window exhaustion",
+      "Set tool_choice to 'auto' (the default) and add system prompt instructions directing the agent to use Grep before Glob before Read"
+    ],
+    "correct": [
+      1
+    ],
+    "explanation": "Forcing tool_choice to call codegraph_search first enables efficient symbol lookups by name, returning location and signatures without loading full files. This establishes an efficient search strategy before context-heavy operations. Option 1 (tool_choice: 'any') forces tool calls but doesn't address the search strategy problem. Option 3 removes a necessary tool entirely. Option 4 relies on prompt-based guidance, which is less reliable than programmatic tool ordering for establishing predictable workflows."
+  },
+  {
+    "id": "d2-07",
+    "domain": 2,
+    "task": "2.3",
+    "scenario": "Multi-Agent Research System",
+    "question": "Your synthesis subagent currently has access to: search_web (web queries), fetch_document (load PDFs/pages), verify_fact (simple fact-checking), and generate_report (structured output). During integration testing, you observe it's calling search_web and fetch_document for complex deep-dive research that should be delegated to specialized subagents, duplicating work and increasing latency. What's the most effective change? (Select TWO.)",
+    "options": [
+      "Give the synthesis agent access to all specialized research tools so it can handle any investigation directly",
+      "Remove search_web and fetch_document from the synthesis agent's tool list, leaving only verify_fact and generate_report",
+      "Add a coordinator-level check that intercepts synthesis requests for research-level work and redirects them to specialized subagents",
+      "Update the synthesis agent's system prompt to explicitly state that deep research should be delegated to the coordinator",
+      "Modify the coordinator to route all research requests to subagents first, then pass findings to synthesis without delegating research capability to the synthesis agent"
+    ],
+    "correct": [
+      1,
+      2
+    ],
+    "explanation": "Option 2 (restricting tools to synthesis-appropriate ones) and Option 3 (programmatic interception) together establish the principle that synthesis stays focused on combining findings, not redoing research. Removing research tools prevents misuse; a coordinator hook enforces the boundary. Option 1 over-provisions the synthesis agent. Option 4 relies on probabilistic prompt compliance instead of structural enforcement. Option 5 (without 2) still exposes the synthesis agent to research tools, perpetuating the problem."
+  },
+  {
+    "id": "d2-08",
+    "domain": 2,
+    "task": "2.4",
+    "scenario": "Code Generation with Claude Code",
+    "question": "Your team uses a custom MCP server that provides tools for your internal API (fetch_service_docs, validate_schema, generate_boilerplate). You want this server available to all team members when they clone the repository, but you also want to keep the API credentials out of version control. How should you configure this MCP server?",
+    "options": [
+      "Create the server configuration in ~/.claude.json in each developer's home directory with API credentials hardcoded",
+      "Create the server configuration in .mcp.json at the project root with environment variable expansion for credentials (e.g., ${INTERNAL_API_TOKEN}), then document in CLAUDE.md which env vars must be set",
+      "Store the server definition in .claude/commands/ so it loads automatically when developers use custom slash commands",
+      "Create a shared .mcp.json in a private repository submodule that developers manually configure"
+    ],
+    "correct": [
+      1
+    ],
+    "explanation": "Project-scoped .mcp.json with environment variable expansion provides team-wide availability via version control while keeping credentials out of the repository—developers set env vars locally (e.g., .env files, CI secrets). Option 1 (user-level) isn't shared via version control. Option 3 (.claude/commands/) defines slash commands, not MCP servers. Option 4 requires manual configuration defeating the point of version control integration."
+  },
+  {
+    "id": "d2-09",
+    "domain": 2,
+    "task": "2.4",
+    "scenario": "Developer Productivity with Claude",
+    "question": "You've configured two MCP servers: one in .mcp.json (team-shared Jira integration) and one in ~/.claude.json (personal experimental GitHub code search tool). You start a new Claude session. What's the expected behavior regarding tool availability?",
+    "options": [
+      "Only tools from the .mcp.json server are available; tools from ~/.claude.json are isolated to that user's personal sessions",
+      "All tools from both the .mcp.json and ~/.claude.json servers are discovered at connection time and available simultaneously",
+      "The personal ~/.claude.json server takes precedence, and team tools from .mcp.json are disabled to prevent conflicts",
+      "Only tools from ~/.claude.json are available; project-level servers are ignored unless explicitly specified in commands"
+    ],
+    "correct": [
+      1
+    ],
+    "explanation": "All configured MCP servers (both project-scoped and user-scoped) are discovered at connection time, and all their tools are available simultaneously. This allows developers to access both team tools and personal experimental tools in the same session. Option 1 incorrectly limits to project tools only. Option 3 inverts the precedence. Option 4 incorrectly ignores project-level servers."
+  },
+  {
+    "id": "d2-10",
+    "domain": 2,
+    "task": "2.4",
+    "scenario": "Multi-Agent Research System",
+    "question": "Your research coordinator currently spawns subagents that repeatedly make exploratory tool calls (e.g., 'list all available sources', 'what documents are in the knowledge base'). Each exploration wastes 3-4 calls to understand available content. You're designing an MCP server to provide visibility into available data. Which approach best reduces exploratory calls?",
+    "options": [
+      "Add a resources section to the MCP server that exposes content catalogs (e.g., issue summaries, documentation hierarchies, database schemas) so subagents can query available data without exploratory tool calls",
+      "Have subagents cache results from their first exploration call so subsequent runs reuse the catalog",
+      "Create a separate 'metadata' tool that subagents call first to understand available content before executing searches",
+      "Build a pre-populated summary document that the coordinator passes to each subagent in its initial prompt"
+    ],
+    "correct": [
+      0
+    ],
+    "explanation": "MCP resources are designed exactly for this use case: exposing content catalogs that reduce exploratory tool calls. The coordinator can introspect available data structures via resources without consuming tool calls. Option 2 (caching) helps within a single session but doesn't scale to fresh runs. Option 3 (metadata tool) is functional but less efficient than resources, which are specifically designed for this pattern. Option 4 works but doesn't scale as content grows."
+  },
+  {
+    "id": "d2-11",
+    "domain": 2,
+    "task": "2.5",
+    "scenario": "Developer Productivity with Claude",
+    "question": "You need to find all test files in a codebase and understand their structure before proposing new test coverage. The codebase has approximately 300 test files with varied naming patterns (*.test.js, *.spec.ts, *_test.go) scattered across 40+ directories. Which tool should you use first to build your file list efficiently?",
+    "options": [
+      "Read: Load all 300 test files into memory to analyze their structure comprehensively",
+      "Grep: Search for test-related keywords like 'describe' or 'test(' across the codebase",
+      "Glob: Use a pattern like **/*.{test.js,spec.ts,_test.go} to match test files by name across all directories",
+      "Bash: Run find commands to recursively search for files matching test naming patterns"
+    ],
+    "correct": [
+      2
+    ],
+    "explanation": "Glob is designed for file path pattern matching by name/extension across multiple directories. A glob pattern like **/*.{test.js,spec.ts,_test.go} efficiently identifies all test files regardless of directory depth without loading their contents. Read (1) is inefficient for 300 files and unnecessary for file discovery. Grep (2) searches file contents, not names. Bash (4) is functional but less specialized than the Glob tool."
+  },
+  {
+    "id": "d2-12",
+    "domain": 2,
+    "task": "2.5",
+    "scenario": "Structured Data Extraction",
+    "question": "You're extracting structured data from customer invoices. Your extraction process successfully parses 85% of invoices, but 15% fail validation (e.g., a calculated_total field doesn't match stated_total). You've attempted to use Edit to fix the parsing logic by searching for a unique string in the extraction function, but the replacement fails with 'non-unique text match.' What's the most reliable fallback approach?",
+    "options": [
+      "Try using Grep to find all occurrences of the string and manually decide which to change",
+      "Use Read to load the entire extraction function, analyze the structure, then use Write to replace the complete file with the corrected version",
+      "Switch to a different tool like Bash to use sed for the replacement",
+      "Give up on code-level fixes and instead implement a separate validation-retry loop at the application level"
+    ],
+    "correct": [
+      1
+    ],
+    "explanation": "When Edit fails due to non-unique text matching, Read + Write is the reliable fallback: Read the full file to understand context, make changes, then Write the corrected version. This avoids Edit's uniqueness requirement. Option 1 (Grep) is for searching, not editing. Option 3 (Bash/sed) is functional but less reliable across different file systems. Option 4 (give up) avoids a solvable problem when a straightforward tool combination works."
+  },
+  {
+    "id": "d2-13",
+    "domain": 2,
+    "task": "2.5",
+    "scenario": "Developer Productivity with Claude",
+    "question": "You're investigating how a specific data-processing function is used across a large codebase. Your incremental strategy should be: First, use [BLANK_1] to locate the function's entry points in the codebase. Then, use [BLANK_2] to examine each entry point file. Finally, use [BLANK_3] to search within those files for references to the function in other contexts. Which sequence correctly orders the built-in tools for efficient incremental exploration?",
+    "options": [
+      "[BLANK_1] = Grep, [BLANK_2] = Glob, [BLANK_3] = Read",
+      "[BLANK_1] = Glob, [BLANK_2] = Read, [BLANK_3] = Grep",
+      "[BLANK_1] = Read, [BLANK_2] = Grep, [BLANK_3] = Glob",
+      "[BLANK_1] = Bash, [BLANK_2] = Glob, [BLANK_3] = Read"
+    ],
+    "correct": [
+      2
+    ],
+    "explanation": "The efficient incremental pattern is: use Grep to search for the function name across files (locate entry points), then Read specific files containing references to understand context and trace usage, then Grep again within narrowed scope for secondary references. This avoids loading all files upfront and builds understanding progressively. Option 2 (Glob first) is wrong because it finds files by name/pattern, not function references. Option 1 misorders the tools. Option 4 uses Bash when specialized tools exist."
+  },
+  {
+    "id": "d2-14",
+    "domain": 2,
+    "task": "2.5",
+    "scenario": "Code Generation with Claude Code",
+    "question": "You need to update a critical configuration file used by multiple services. The file is 850 lines long with many configuration sections. When you try using Edit with a targeted replacement, the unique text matching fails because similar configuration patterns appear in 4 different sections. You have two options: (1) Read the entire file, make all necessary changes in memory, then Write the modified version back; (2) Use Bash with sed to make multiple targeted replacements. Which approach is better for a configuration file with multiple similar sections? (Select TWO.)",
+    "options": [
+      "Use Read + Write because you get full file context and can make changes safely with certainty about the complete state",
+      "Use Bash with sed because sed specializes in regex-based replacements and handles duplicates automatically",
+      "Use Edit multiple times on each section with more specific context around the target text to avoid ambiguity",
+      "Use Read + Write because you can apply consistent validation or formatting across the entire file in one pass",
+      "Use Bash with grep first to identify exactly which lines contain the patterns, then decide on the tool"
+    ],
+    "correct": [
+      0,
+      3
+    ],
+    "explanation": "Options 1 and 4 both support Read + Write: Option 1 emphasizes full-file context preventing unintended changes; Option 4 highlights the ability to apply consistent transformations across all sections simultaneously. Bash with sed (2) is risky without full context—you might replace intended occurrences. Option 3 (Edit multiple times) is tedious and brittle for 4 sections. Option 5 (grep first) adds a step without solving the core problem that Edit's uniqueness requirement is the bottleneck."
+  }
+]

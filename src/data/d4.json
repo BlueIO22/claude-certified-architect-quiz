@@ -1,0 +1,244 @@
+[
+  {
+    "id": "d4-01",
+    "domain": 4,
+    "task": "4.1",
+    "scenario": "Structured Data Extraction",
+    "question": "Your extraction system frequently flags non-existent fields in documents, claiming extracted values when the source contains no such information. For example, it extracts a 'warranty_end_date' field even when warranty sections are absent. You provide the instruction 'extract all relevant fields' but hallucinations persist across 18% of documents. What's the most effective way to reduce these false positives?",
+    "options": [
+      "Define explicit extraction rules specifying which fields are extracted only when certain keywords or sections are present in the source document",
+      "Increase model temperature to encourage more diverse attempts, allowing manual post-processing to filter hallucinations",
+      "Add a general instruction 'do not make up data' to the system prompt",
+      "Expand the input document context with 10 additional example extractions to improve pattern learning"
+    ],
+    "correct": [
+      0
+    ],
+    "explanation": "Explicit extraction rules directly address hallucination by requiring source evidence for each field. Option 2 is counterproductive (higher temperature increases hallucination). Option 3's generic instruction is ineffective compared to specific, categorical criteria. Option 4 adds more examples but doesn't eliminate the root cause: vague field definitions without evidence requirements."
+  },
+  {
+    "id": "d4-02",
+    "domain": 4,
+    "task": "4.1",
+    "scenario": "Claude Code for Continuous Integration",
+    "question": "Your automated code review flags too many low-severity issues (e.g., variable naming, whitespace), causing developers to dismiss entire review batches as noise. High-confidence bugs are buried in the output. You've tried adding 'be conservative' to the prompt, but the false positive rate hasn't improved. What's the most effective next step?",
+    "options": [
+      "Implement a machine learning classifier to predict which findings developers will dismiss",
+      "Add confidence scoring to each finding and use statistical filtering to report only findings above the 90th percentile",
+      "Define explicit, categorical severity criteria with concrete code examples for each level (critical/high/low), then temporarily disable the low-severity category to rebuild developer trust",
+      "Require developers to accept or reject each finding individually before the next PR can be reviewed"
+    ],
+    "correct": [
+      2
+    ],
+    "explanation": "Explicit categorical criteria with examples directly define scope boundaries and restore trust. Temporarily disabling noisy categories while improving prompts is a proven pattern. Option 1 is over-engineered when prompt refinement hasn't been attempted. Option 2 relies on miscalibrated confidence scores (the agent is already overconfident on low-value findings). Option 4 shifts burden to developers without improving the system."
+  },
+  {
+    "id": "d4-03",
+    "domain": 4,
+    "task": "4.1",
+    "scenario": "Customer Support Resolution Agent",
+    "question": "Your support agent escalates straightforward billing questions to humans while attempting to handle complex policy exceptions autonomously, achieving only 52% first-contact resolution. Previous attempts to fix this using 'escalate when uncertain' in the prompt failed. What's the root cause and how should you address it?",
+    "options": [
+      "The agent lacks explicit escalation criteria distinguishing straightforward cases from policy exceptions; add clear categorical examples showing escalation for policy ambiguity and autonomous resolution for routine questions",
+      "Implement a pre-call classifier that determines case complexity before the agent engages",
+      "The agent needs access to historical escalation decisions to learn patterns through examples",
+      "Enable the agent to query a knowledge base during reasoning to look up relevant policies before deciding to escalate"
+    ],
+    "correct": [
+      0
+    ],
+    "explanation": "Explicit escalation criteria with few-shot examples directly teach the distinction between routine and exception cases, addressing the root cause. Option 2 is over-engineered when prompt refinement hasn't addressed the actual problem. Option 3's pattern learning won't work without explicit rule definitions. Option 4 delays escalation decisions, compounding the problem; the issue is unclear decision boundaries, not missing information."
+  },
+  {
+    "id": "d4-04",
+    "domain": 4,
+    "task": "4.2",
+    "scenario": "Structured Data Extraction",
+    "question": "Your extraction system handles inline citations correctly but fails on documents with bibliography-only citations, leaving source_url fields null or hallucinated. Adding the instruction 'handle varied citation formats' produced inconsistent results. What's the most effective approach to achieve consistent extraction across both formats?",
+    "options": [
+      "Create two separate extraction tools: one optimized for inline citations, one for bibliographies, and classify each document before extraction",
+      "Increase max_tokens to provide more reasoning space for format adaptation",
+      "Split documents by citation type during pre-processing, then merge results afterward",
+      "Include 2-3 few-shot examples demonstrating correct extraction from documents with inline citations and separately from documents with bibliographies, showing how to handle each format distinctly"
+    ],
+    "correct": [
+      3
+    ],
+    "explanation": "Few-shot examples demonstrating both citation formats enable the model to generalize the correct approach to novel variations without requiring architectural changes. This is the most proportionate and effective first approach. Options 1 and 3 over-engineer by adding complexity when prompt improvement hasn't been tried. Option 2 doesn't address the actual problem, which is format ambiguity, not reasoning space."
+  },
+  {
+    "id": "d4-05",
+    "domain": 4,
+    "task": "4.2",
+    "scenario": "Code Generation with Claude Code",
+    "question": "Your code generation system struggles with ambiguous refactoring requests. When developers ask 'simplify this function,' it produces inconsistent transformations: sometimes removing helper functions, sometimes inlining logic, sometimes reordering statements. Which of the following would most effectively improve consistency? (Select TWO.)",
+    "options": [
+      "Add 2-3 few-shot examples showing specific refactoring transformations for ambiguous requests like 'simplify,' demonstrating the preferred trade-off between readability and performance",
+      "Increase the system prompt constraints to specify all possible refactoring patterns the model must consider",
+      "Implement a routing step that asks developers to clarify their intent before generating code",
+      "Include concrete before/after code examples in the prompt that demonstrate your preferred simplification style for different code patterns",
+      "Reduce max_tokens to force more concise, consistent output"
+    ],
+    "correct": [
+      0,
+      3
+    ],
+    "explanation": "Both 1 and 4 provide concrete examples of preferred outputs for ambiguous scenarios, enabling the model to generalize the desired behavior to novel requests. Few-shot examples (1) show reasoning for trade-off choices, while before/after examples (4) demonstrate style preferences. Option 2 increases constraints without adding clarity. Option 3 shifts burden to developers for guidance that the system should provide. Option 5 reduces reasoning capability, worsening consistency rather than improving it."
+  },
+  {
+    "id": "d4-06",
+    "domain": 4,
+    "task": "4.3",
+    "scenario": "Structured Data Extraction",
+    "question": "You're building an extraction system that must reliably produce valid JSON output. Currently, you format extraction instructions as prose prompts, requesting the model return JSON, but 4-5% of responses have syntax errors (mismatched quotes, trailing commas, unescaped characters) that break downstream processing. What's the most reliable approach to eliminate JSON syntax errors?",
+    "options": [
+      "Add strict JSON formatting rules to the system prompt with 3-4 examples of well-formatted extraction output",
+      "Use tool_use with JSON schemas as extraction tool parameters, extracting the tool_use response; then add Pydantic validation with retry on schema violations",
+      "Parse responses with error recovery: catch JSON parse failures, send the malformed JSON back with explicit error messages, and retry",
+      "Use Claude with highest model tier (largest context window) to reduce formatting mistakes"
+    ],
+    "correct": [
+      1
+    ],
+    "explanation": "Tool_use with JSON schemas provides strict syntax enforcement by design, eliminating JSON syntax errors entirely. Pydantic validation catches semantic errors separately. Option 1 relies on prompt instructions, which are probabilistic and won't achieve 100% correctness. Option 3 implements error recovery but doesn't prevent errors. Option 4 misunderstands that context window size doesn't solve deterministic formatting requirements."
+  },
+  {
+    "id": "d4-07",
+    "domain": 4,
+    "task": "4.3",
+    "scenario": "Structured Data Extraction",
+    "question": "You're designing a JSON schema for extracting contract terms from varied documents. Some contracts always include warranty periods, but others never do. Many fields like 'renewal_clause' may or may not exist in the source document. If you mark these as required fields, the model often fabricates values to satisfy the schema. If you mark them optional, you lose the data when present. What's the most effective schema design pattern?",
+    "options": [
+      "Always mark fields as required, then post-process extractions to remove obviously hallucinated values",
+      "Create two separate extraction schemas: one for documents with warranty information, one without, and classify documents first",
+      "Mark all fields as optional, then run a second extraction pass to confirm which fields were legitimately absent versus missed",
+      "Mark fields as optional (nullable) when source documents may not contain the information, and separately validate that the model returns null rather than fabricated values for absent information"
+    ],
+    "correct": [
+      3
+    ],
+    "explanation": "Optional/nullable fields allow the model to represent both 'present' and 'absent' states without hallucinating. This is the standard pattern for preventing fabrication. Option 1 is reactive rather than preventive. Options 2 and 3 add unnecessary complexity without addressing the root cause: the schema itself should permit absence without penalty."
+  },
+  {
+    "id": "d4-08",
+    "domain": 4,
+    "task": "4.4",
+    "scenario": "Structured Data Extraction",
+    "question": "Your extraction system validates extracted data against a schema and implements retry when validation fails. However, analysis shows that 60% of failed extractions result from information simply being absent from the source document. Retrying those cases produces the same fabricated output, wasting API calls. How should you improve the retry strategy?",
+    "options": [
+      "Distinguish between format errors (fixable via retry) and semantic errors (required data absent from source); implement retries only for format mismatches, and return null for confirmed absent information",
+      "Increase retry attempts from 3 to 10 to maximize the chance the model self-corrects on resubmission",
+      "Modify the prompt to instruct the model to never hallucinate, combined with higher temperature for variability",
+      "Implement retry only for a subset of validation errors: required field missing, but not type mismatches"
+    ],
+    "correct": [
+      0
+    ],
+    "explanation": "Retries are ineffective when information is genuinely absent from the source. Distinguishing retryable (format) from non-retryable (missing data) errors is the key to efficiency. Option 2 wastes API calls on non-recoverable errors. Option 3 applies contradictory instructions (never hallucinate vs higher temperature). Option 4 doesn't adequately distinguish between recoverable and non-recoverable failures."
+  },
+  {
+    "id": "d4-09",
+    "domain": 4,
+    "task": "4.4",
+    "scenario": "Multi-Agent Research System",
+    "question": "Your synthesis agent validates extracted claims by comparing against source documents and flags conflicts (e.g., 'Wikipedia says 2020, academic paper says 2018'). However, when developers dismiss these conflict findings as both sources being valid (just dated differently), you have no systematic way to learn which conflict patterns are legitimate versus actual errors. How should you design the validation feedback system?",
+    "options": [
+      "Implement a two-tier system where high-confidence conflicts immediately block synthesis, while lower-confidence conflicts require developer approval before inclusion",
+      "Add a 'detected_pattern' field to conflict findings so dismissed findings can be analyzed for patterns; systematically track which conflict types developers accept to improve future validation rules",
+      "Have the synthesis agent pre-emptively add confidence scores to all findings, then use statistical analysis of dismissal rates to calibrate thresholds",
+      "Expand the validation rules to explicitly enumerate known-acceptable patterns, precluding those patterns from triggering conflicts"
+    ],
+    "correct": [
+      1
+    ],
+    "explanation": "Tracking detected_pattern fields in dismissed findings enables systematic analysis of false positive patterns and continuous improvement. This is a proven feedback loop pattern for extraction quality. Option 1's blocking approach might prevent legitimate findings. Option 3 relies on miscalibrated confidence scores. Option 4 is reactive (hand-coding patterns) rather than data-driven."
+  },
+  {
+    "id": "d4-10",
+    "domain": 4,
+    "task": "4.5",
+    "scenario": "Claude Code for Continuous Integration",
+    "question": "Your CI/CD pipeline has two independent jobs: (1) automated code review of every PR before merge (developers wait ~2 minutes), and (2) a nightly security audit on the full codebase (results reviewed next morning). Currently both use real-time API calls. You want to use the Message Batches API (50% cost savings, up to 24-hour SLA) for cost reduction. How should you evaluate this decision?",
+    "options": [
+      "Migrate both to batch processing and implement polling; accepting that code reviews may take 12+ hours won't significantly impact developers",
+      "Keep real-time for both jobs; batch processing's lack of guaranteed SLA makes it unsuitable for any production workflow",
+      "Apply batch processing only to the security audit job; keep real-time API for code review (it blocks developer workflow). Cost savings only for non-blocking, latency-tolerant workloads",
+      "Use batch for code reviews but real-time for security audit; the review findings are less time-sensitive than security"
+    ],
+    "correct": [
+      2
+    ],
+    "explanation": "Batch processing suits latency-tolerant, non-blocking workloads (overnight audits) but not blocking workflows where developers wait (code review). This is the key principle for API selection. Option 1 misunderstands developer workflow impact. Option 2 overgeneralizes; batch is fine when latency is acceptable. Option 4 reverses the correct logic."
+  },
+  {
+    "id": "d4-11",
+    "domain": 4,
+    "task": "4.5",
+    "scenario": "Developer Productivity with Claude",
+    "question": "You're building a developer productivity system that helps engineers understand unfamiliar codebases by generating documentation and boilerplate code. Which of the following scenarios are appropriate use cases for batch processing with the Message Batches API? (Select TWO.)",
+    "options": [
+      "A developer requests on-demand code generation to unblock their current task; they're waiting at their computer",
+      "Your team runs a scheduled nightly job to generate documentation stubs for all new source files added since the last run",
+      "A developer requests ad-hoc analysis of a legacy module to understand its data flow before refactoring",
+      "Your CI/CD pipeline generates boilerplate for new service definitions once per week during a scheduled maintenance window",
+      "A developer interactively refines generated code by asking follow-up questions and reviewing each iteration"
+    ],
+    "correct": [
+      1,
+      3
+    ],
+    "explanation": "Batch processing suits scheduled, non-blocking, latency-tolerant workloads. Option 2 (nightly documentation) and 4 (weekly CI boilerplate) are perfect candidates: predictable timing, no developer wait, and cost savings are valuable. Options 1, 3, and 5 require interactive feedback loops or immediate results where batch's 24-hour SLA is inappropriate."
+  },
+  {
+    "id": "d4-12",
+    "domain": 4,
+    "task": "4.5",
+    "scenario": "Structured Data Extraction",
+    "question": "You submit a batch of 500 documents for extraction using the Message Batches API. When processing completes, you discover 47 documents failed due to exceeding context limits (documents too large). How should you handle these failures to maximize first-pass completion on resubmission?",
+    "options": [
+      "Resubmit all 500 documents with increased max_tokens to accommodate larger contexts",
+      "Resubmit only the 47 failed documents using the real-time API instead of batch processing",
+      "Discard the failed documents and reprocess them after improving the extraction prompt to be more concise",
+      "Identify failed documents by custom_id, chunk the oversized documents into smaller sections, and resubmit with instructions to extract from each chunk separately, then merge results"
+    ],
+    "correct": [
+      3
+    ],
+    "explanation": "Batch failures can be identified by custom_id and resubmitted with targeted modifications (chunking) based on the specific failure reason. This is the most cost-efficient approach. Option 1 wastes tokens on already-successful documents. Option 2 abandons batch processing cost savings. Option 3 loses data unnecessarily."
+  },
+  {
+    "id": "d4-13",
+    "domain": 4,
+    "task": "4.6",
+    "scenario": "Claude Code for Continuous Integration",
+    "question": "Your automated code review runs in a single pass analyzing all changes in a large PR (18 files, 650 lines modified). You observe that the review misses obvious bugs in early files and produces contradictory feedback (flagging a pattern as problematic in file A but approving identical code in file B). This suggests attention dilution across too many files. What's the most effective architectural change?",
+    "options": [
+      "Implement parallel reviews where the model analyzes different file groups independently, then aggregate findings",
+      "Split into sequential passes: first analyze each file individually for local issues, then run a separate integration pass examining cross-file data flow and consistency",
+      "Require developers to split PRs into smaller batches (3-4 files) before automated review; remove burden from the review system",
+      "Use a multi-instance ensemble: run the review three independent times on the full PR, reporting only issues that appear in at least two runs"
+    ],
+    "correct": [
+      1
+    ],
+    "explanation": "Focused per-file passes ensure consistent depth while a separate integration pass catches cross-file issues. This directly addresses attention dilution and contradictions. Option 1 still analyzes too many files at once. Option 3 shifts burden to developers. Option 4 would suppress real bugs by requiring consensus."
+  },
+  {
+    "id": "d4-14",
+    "domain": 4,
+    "task": "4.6",
+    "scenario": "Code Generation with Claude Code",
+    "question": "You've implemented a system where Claude generates code changes, and a separate independent Claude instance reviews the generated code without seeing the generator's reasoning or context. This independent review catches bugs the generator missed. However, it also flags style choices made by the generator as problematic, creating unnecessary back-and-forth cycles. How should you improve the multi-instance review architecture?",
+    "options": [
+      "Include the generator's reasoning and architectural context in the reviewer's prompt so it understands intentional design choices",
+      "Combine both instances into a single review with extended reasoning to catch all issues at once",
+      "Have the reviewer output confidence scores alongside each finding; route high-confidence findings (likely real bugs) to the developer, but suppress low-confidence style objections to reduce cycles",
+      "Run the review process three times and only report findings that appear in all three runs"
+    ],
+    "correct": [
+      2
+    ],
+    "explanation": "Confidence scoring calibrated with labeled validation data enables routing decisions without compromising the review instance's independence. High-confidence bugs are preserved while low-confidence style issues are suppressed, reducing unnecessary cycles. Option 1 defeats the purpose of independent review by reintroducing context bias. Option 2 loses the benefits of separate instances. Option 4 would suppress real bugs by requiring consensus."
+  }
+]

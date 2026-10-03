@@ -34,3 +34,9 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# vite
+/dist
+
+# Private, local-only material (copied exam-guide content). Never commit or deploy.
+/private/

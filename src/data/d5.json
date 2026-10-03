@@ -1,0 +1,210 @@
+[
+  {
+    "id": "d5-01",
+    "domain": 5,
+    "task": "5.1",
+    "scenario": "Customer Support Resolution Agent",
+    "question": "A customer contacts your support agent with three separate issues: a damaged shipment, an incorrect charge for expedited shipping, and account access problems after a password reset. After investigating each issue separately, your agent has accumulated 200+ lines of tool outputs (full order details, payment transaction history, account logs). On the third issue, the agent begins contradicting earlier findings, claiming the customer has not been charged for expedited shipping even though it clearly extracted that charge from the payment tool output earlier. What's the most effective way to prevent this context degradation?",
+    "options": [
+      "Extract and persist transactional facts (order ID, charge amount, status) into a separate structured 'case facts' block, included in each API request outside the conversation history",
+      "Implement a summarization step after each issue is resolved, condensing the tool outputs to a short narrative before proceeding to the next issue",
+      "Reduce the number of issues handled per session to one issue per conversation to prevent accumulation of tool outputs",
+      "Add explicit system prompt instructions reminding the agent to reference previous findings before making contradictory claims"
+    ],
+    "correct": [
+      0
+    ],
+    "explanation": "Extracting transactional facts into a persistent 'case facts' block (correct answer) directly addresses the root cause: critical numerical data gets lost when compressed into summaries or buried in middle-section context. The case facts remain available for every subsequent API request, preventing the contradiction about the charge. Option 2 (summarization) is precisely the anti-pattern the guide warns against--condensing numerical values into vague summaries causes loss of precision. Option 3 (single issue per session) is unnecessary overhead that worsens user experience. Option 4 (system prompt reminders) relies on probabilistic model behavior, which fails when context window degradation is the real problem."
+  },
+  {
+    "id": "d5-02",
+    "domain": 5,
+    "task": "5.1",
+    "scenario": "Structured Data Extraction",
+    "question": "Your structured data extraction system processes insurance claim documents. Each lookup_claim_details tool call returns 45+ fields including date fields in Unix timestamps, status codes (0=pending, 1=approved, 2=denied), and nested lists of provider information. Your extraction model needs only 6 fields (claimant name, amount, approval status, date submitted, provider ID, decision date), but the verbose output accumulates across multiple documents in a batch job. After processing documents 1-15 successfully, document 16 returns a hallucinated provider ID that doesn't exist in the document, and documents 17-20 extract all fields correctly but assign them to wrong document records. What's the most effective fix?",
+    "options": [
+      "Implement a validation loop that re-extracts all fields from each document if any field fails validation",
+      "Increase the model's max_tokens limit to provide larger context for processing all batch documents",
+      "Add few-shot examples showing correct extraction of claims with nested provider information",
+      "Trim the lookup_claim_details tool output to return only the six fields needed for extraction before they accumulate in the agent context"
+    ],
+    "correct": [
+      3
+    ],
+    "explanation": "Trimming tool outputs to relevant fields (correct answer) directly prevents context bloat that causes hallucination and field misalignment in later documents. This follows the exam guide's principle: 'Tool results accumulate in context and consume tokens disproportionately to their relevance.' Removing 39+ unused fields per lookup prevents the models from becoming confused about which data is critical. Option 2 (validation + re-extraction) is expensive and treats the symptom, not the cause. Option 3 (larger context) doesn't address attention quality issues in long batch sequences. Option 4 (few-shot examples) doesn't solve the underlying problem of verbose tool outputs consuming context."
+  },
+  {
+    "id": "d5-03",
+    "domain": 5,
+    "task": "5.2",
+    "scenario": "Customer Support Resolution Agent",
+    "question": "Your agent logs show two concerning patterns: (1) it escalates straightforward warranty claims (customer shows photo of broken device, warranty is valid, refund is within policy) to human agents, and (2) it attempts to autonomously resolve cases where customers explicitly request a human agent, either by trying to convince them the issue is fixable or by offering partial workarounds. Current first-contact resolution is 42%, well below the 80% target. You examine a few cases and notice the agent's escalation decisions correlate with customer tone (frustrated/angry customers get escalated, polite customers get attempted resolutions). What's the most effective way to improve escalation reliability?",
+    "options": [
+      "Deploy a sentiment classifier to measure customer frustration levels and automatically escalate high-frustration cases before the agent responds",
+      "Add explicit escalation criteria to the system prompt with few-shot examples demonstrating when to escalate (policy exceptions, customer requests) versus when to resolve autonomously (within-policy issues with clear evidence)",
+      "Implement a confidence scoring mechanism where the agent self-reports confidence (1-10) before each response, and automatically escalate if confidence is below 6",
+      "Require the agent to explain its escalation reasoning in text form, then review these explanations for patterns and provide corrective feedback"
+    ],
+    "correct": [
+      1
+    ],
+    "explanation": "Adding explicit escalation criteria with few-shot examples (correct answer) directly addresses the root cause: the agent lacks clear decision boundaries between escalation cases and resolvable cases. The guide explicitly states that 'sentiment-based escalation and self-reported confidence scores are unreliable proxies for actual case complexity,' making Options 1 and 3 incorrect. Option 1's sentiment classifier doesn't solve the core problem--a polite customer with a policy exception still needs escalation, while an angry customer with a straightforward warranty claim doesn't. Option 2 provides the deterministic guidance the agent needs. Option 4 (feedback review) is reactive and slow compared to fixing the prompt proactively."
+  },
+  {
+    "id": "d5-04",
+    "domain": 5,
+    "task": "5.2",
+    "scenario": "Developer Productivity with Claude",
+    "question": "Your developer productivity agent helps engineers explore unfamiliar codebases and answer questions like \"Where is the payment processing logic implemented?\" After the agent spends 30+ turns tracing through multiple files, a developer asks a complex architectural question: \"Can I replace this custom caching layer with Redis without breaking the pub/sub notifications?\" The agent returns an inconclusive response: \"It might work, but I'd need to trace more dependencies to be sure.\" The developer, frustrated by the inconclusive answer, reiterates the question in different words and asks the agent to \"please give a definitive answer.\" What should the agent do?",
+    "options": [
+      "Acknowledge the complexity and immediately escalate to a human architect, explaining that the question exceeds the agent's capability to provide reliable guidance",
+      "Continue tracing more dependencies to gather additional context, then provide a best-guess answer based on accumulated observations",
+      "Acknowledge the developer's need for clarity, honor the explicit escalation request by escalating to a human architect with a summary of findings so far",
+      "Explain that the question requires reading the entire codebase and ask the developer to narrow the scope to a specific file or component"
+    ],
+    "correct": [
+      2
+    ],
+    "explanation": "Honoring explicit escalation requests (correct answer) is a core principle the guide emphasizes: 'Honor explicit customer requests for human agents immediately without first attempting investigation.' The developer has clearly stated their preference. Option 1 is close but doesn't emphasize respecting the developer's explicit request as the trigger. Option 2 continues investigation after the developer has expressed frustration and asked for a human, violating the principle of honoring requests. Option 4 deflects responsibility back to the developer. The correct approach combines acknowledgment of the issue with respect for the developer's stated preference."
+  },
+  {
+    "id": "d5-05",
+    "domain": 5,
+    "task": "5.3",
+    "scenario": "Multi-Agent Research System",
+    "question": "Your multi-agent research system is investigating \"cybersecurity trends in 2026.\" The coordinator spawns three subagents in parallel: a web search agent, a document analysis agent, and a threat intelligence feed reader. The web search subagent encounters a timeout after 45 seconds while attempting to search for \"zero-day vulnerability disclosures.\" You need to decide how this failure information flows back to the coordinator to enable intelligent recovery. Which error propagation approach and a backup strategy combination would best enable continued research? (Select TWO.)",
+    "options": [
+      "Return structured error context including the failure type (timeout), the attempted query (\"zero-day vulnerability disclosures\"), any partial results found before timeout (2 relevant articles discovered), and potential alternative approaches (splitting query into narrower sub-searches)",
+      "Implement automatic retry logic within the web search subagent with exponential backoff, only returning a generic 'search unavailable' message to the coordinator after retries are exhausted",
+      "Catch the timeout, return an empty results set marked as successful, and let the coordinator proceed with other research, since the search information is not critical",
+      "Propagate the timeout exception directly to a top-level error handler that terminates the entire research workflow and notifies the coordinator to halt all subagents",
+      "Have the synthesis subagent, which is waiting for findings, implement local recovery by refocusing its analysis on the data it has received so far from other sources, and annotate the final report with a 'cybersecurity_coverage: partial' field noting the missing threat intelligence"
+    ],
+    "correct": [
+      0,
+      4
+    ],
+    "explanation": "Options 1 and 5 together enable intelligent recovery. Option 1 (structured error context) gives the coordinator the information needed to make decisions--retrying with a narrower search, pivoting to alternative sources, or proceeding with partial results. Option 5 (local recovery with coverage annotations) allows downstream agents to adapt when upstream sources fail, and the coverage annotation preserves transparency about data gaps. Options 2, 3, and 4 are all anti-patterns from the guide: Option 2 hides valuable context with generic messages, Option 3 suppresses the error by marking failure as success, and Option 4 terminates the workflow unnecessarily when recovery strategies could succeed. Together, 1 and 5 follow the principle: 'returning structured error context' + 'subagents implement local recovery for transient failures' + 'structuring synthesis output with coverage annotations.'"
+  },
+  {
+    "id": "d5-06",
+    "domain": 5,
+    "task": "5.3",
+    "scenario": "Customer Support Resolution Agent",
+    "question": "Your agent's get_customer tool sometimes fails with a transient network error, and sometimes returns no matching customer (validation error: customer not found in database). Your agent currently catches both error types identically, logging \"Customer lookup failed\" and asking the user to verify the information. In production logs, you observe that for transient errors (actual network failures), immediate retry succeeds 85% of the time. For validation errors (customer not found), retries never help. What change to error handling would most improve system reliability?",
+    "options": [
+      "Add exponential backoff logic to the get_customer tool itself so it retries automatically on any error without exposing failures to the agent",
+      "Implement structured error responses that distinguish transient errors (with an isRetryable flag and recommended retry count) from validation errors (with isRetryable=false and an explanation that the customer record doesn't exist)",
+      "Log all failures with high detail, then analyze patterns monthly to identify which error types are retryable versus not",
+      "Route all tool failures through a separate error-handling subagent that determines the appropriate recovery strategy"
+    ],
+    "correct": [
+      1
+    ],
+    "explanation": "Structured error responses with clear isRetryable flags (correct answer) enable the agent to make appropriate recovery decisions immediately: retry transient errors, but communicate a different message for validation errors. This follows the guide's principle: 'The distinction between transient errors (timeouts, service unavailability), validation errors (invalid input), business errors (policy violations), and permission errors' and 'returning structured error metadata prevents wasted retry attempts.' Option 2 pushes retry logic to the tool, losing visibility into how many retries happened. Option 3 (monthly analysis) is reactive and doesn't improve runtime behavior. Option 4 adds unnecessary complexity when structured error responses solve the problem directly."
+  },
+  {
+    "id": "d5-07",
+    "domain": 5,
+    "task": "5.4",
+    "scenario": "Code Generation with Claude Code",
+    "question": "You're using Claude to refactor a large legacy codebase (800+ files). After exploring for 30 turns, the agent has read 120 files totaling 250KB of source code. By turn 40, you notice the agent starts referencing patterns it identified in turns 5-10 inconsistently: \"This module probably follows the MVC pattern we saw earlier,\" when in fact the module uses a different architectural pattern that was documented in turn 12. The agent is also beginning to suggest changes that contradict earlier architectural decisions. What's the most effective approach to counteract this context degradation?",
+    "options": [
+      "Start a new session with a compact summary injected at the beginning, since resuming the current session with stale findings is unreliable",
+      "Create a scratchpad file documenting key architectural patterns, module responsibilities, and critical findings from the early exploration phases, and reference it in subsequent turns to maintain consistency",
+      "Use the /compact command to compress context and continue in the same session, which will reset the agent's attention to recent findings",
+      "Split the large refactoring into smaller tasks (refactor 50 files at a time) handled by separate Claude sessions to prevent any single session from degrading"
+    ],
+    "correct": [
+      1
+    ],
+    "explanation": "Creating and maintaining a scratchpad file (correct answer) directly addresses the root cause: 'Context degradation in extended sessions: models start giving inconsistent answers and referencing typical patterns rather than specific classes discovered earlier.' The guide specifically names this technique: 'Having agents maintain scratchpad files recording key findings, referencing them for subsequent questions to counteract context degradation.' Option 2 (new session) loses continuity and requires re-exploration. Option 3 (/compact) compresses but doesn't systematically preserve architectural decisions across context boundaries. Option 4 (smaller sessions) fragments the work unnecessarily when scratchpad persistence solves the problem."
+  },
+  {
+    "id": "d5-08",
+    "domain": 5,
+    "task": "5.4",
+    "scenario": "Developer Productivity with Claude",
+    "question": "You're building a developer productivity agent that helps engineers explore test coverage gaps in a complex microservices codebase. The main agent coordinates while specialized subagents investigate specific questions: one maps all test files, another traces refund flow dependencies, another identifies high-risk untested paths. After the subagents complete their investigations, the main agent synthesizes findings into a prioritized testing plan. However, you're concerned about context window exhaustion if you inject all subagent findings directly into the main agent's prompt. Which two strategies would best preserve the main agent's coordination context while still capturing detailed subagent findings? (Select TWO.)",
+    "options": [
+      "Have each subagent export its findings to a scratchpad manifest file (JSON structure listing key findings with source locations), which the main agent loads and references by path rather than including full content inline",
+      "Store detailed subagent findings in a database, then have the main agent query only high-level summaries for coordination decisions, keeping detailed findings available if specific questions arise",
+      "Require subagents to output findings in a compact structured format (finding name, location, priority score, brief explanation) instead of verbose prose, and inject these structured summaries into the main agent's prompt",
+      "Have each subagent summarize its findings into a single narrative paragraph, then concatenate all paragraphs into the main agent's context for synthesis",
+      "Implement a checkpoint/restore mechanism where the main agent periodically saves state to disk and reloads if context fills, avoiding the need to pass findings through the prompt at all"
+    ],
+    "correct": [
+      0,
+      2
+    ],
+    "explanation": "Options 1 and 3 preserve context efficiently. Option 1 (manifest files with paths) follows the guide's principle of 'structured state persistence' and lets the main agent reference findings without embedding them, crucial for extended sessions. Option 3 (compact structured format) aligns with the guide's advice: 'Modifying upstream agents to return structured data (key facts, citations, relevance scores) instead of verbose content and reasoning chains when downstream agents have limited context budgets.' Together they provide both persistent storage (1) and format optimization (3). Option 2 (database queries) adds infrastructure complexity the guide doesn't recommend for coordination. Option 4 (narrative paragraphs) concatenates verbose output, exactly what the guide warns against for context-limited synthesis agents."
+  },
+  {
+    "id": "d5-09",
+    "domain": 5,
+    "task": "5.5",
+    "scenario": "Structured Data Extraction",
+    "question": "Your data extraction system achieves 97% accuracy overall but a detailed analysis reveals concerning patterns: invoices extracted with 99% accuracy, medical forms with 84% accuracy, and property deeds with 91% accuracy. Among medical forms, medication names extract at 96% accuracy but dosages extract at 71% accuracy. You're considering automating high-confidence extractions to bypass human review. Before doing so, what validation step is most critical?",
+    "options": [
+      "Deploy a second independent review model trained on the same data to validate the first model's high-confidence extractions",
+      "Analyze the 97% aggregate accuracy score using confusion matrices to determine if false positives or false negatives dominate",
+      "Conduct stratified random sampling of high-confidence extractions, measuring error rates specifically for medical forms and dosage fields to verify that confidence scores are well-calibrated across all document types and fields before automating",
+      "Implement field-level confidence scores and route only extractions with confidence above 95% to automated processing"
+    ],
+    "correct": [
+      2
+    ],
+    "explanation": "Stratified random sampling to measure accuracy by document type and field (correct answer) directly addresses the core principle the guide emphasizes: 'The risk that aggregate accuracy metrics (e.g., 97% overall) may mask poor performance on specific document types or fields' and 'Validating accuracy by document type and field before automating high-confidence extractions.' The 97% aggregate hides the 71% dosage accuracy. Option 2 (second model) adds complexity without addressing the core validation gap. Option 3 (confusion matrices) analyzes overall performance but doesn't stratify by type/field. Option 4 (routing by confidence) assumes confidence scores are properly calibrated, but that's what stratified sampling is designed to verify."
+  },
+  {
+    "id": "d5-10",
+    "domain": 5,
+    "task": "5.5",
+    "scenario": "Claude Code for Continuous Integration",
+    "question": "Your CI pipeline runs Claude to review pull requests and post inline comments on detected issues. Your automated review system reports high confidence on all findings but developers dismiss 35% of the high-confidence findings as false positives. When you sample 50 high-confidence findings marked as \"bugs,\" only 28 are actually bugs (56% precision), but when you sample the same count of findings marked as \"performance,\" 48 are valid (96% precision). You want to reduce developer frustration from false positives without losing detection of real bugs. Which approach best aligns with your confidence data?",
+    "options": [
+      "Temporarily disable the 'bugs' review category entirely to restore developer trust, then iteratively improve that category's prompt and few-shot examples before re-enabling it",
+      "Implement field-level confidence calibration by analyzing historical dismissal patterns, then only post 'bugs' findings with model confidence above 85% while keeping 'performance' findings at normal thresholds",
+      "Require developers to provide feedback on each dismissed finding, then use that feedback to retrain a confidence model",
+      "Increase the review model's temperature setting to reduce overly confident predictions across all categories"
+    ],
+    "correct": [
+      0
+    ],
+    "explanation": "Temporarily disabling the problematic category (correct answer) directly applies the principle the guide emphasizes: 'Temporarily disabling high false-positive categories to restore developer trust while improving prompts for those categories.' The \"bugs\" category has a precision problem (56% true positive rate) that's destroying developer confidence in all review findings, even the high-precision \"performance\" category. Option 2 (higher confidence thresholds) doesn't address the root cause--even 85% confidence on a 56% precision category will have false positives. Option 3 (developer feedback retraining) requires infrastructure and is slower than prompt refinement. Option 4 (temperature adjustment) is a blunt instrument affecting all categories, including the well-performing \"performance\" category."
+  },
+  {
+    "id": "d5-11",
+    "domain": 5,
+    "task": "5.6",
+    "scenario": "Multi-Agent Research System",
+    "question": "Your research system synthesizes findings on \"corporate tax policy trends.\" Three subagents find conflicting statistics: Agent A reports \"73% of Fortune 500 companies used tax loss carryforwards in 2025\" (source: PwC tax report, April 2025), Agent B reports \"68% of large corporations utilized tax loss carryforwards\" (source: IRS tax data, February 2025), and Agent C finds \"The trend is increasing, with more companies using these strategies\" (source: blog post, undated). When synthesizing these findings, you observe the system picks the highest number (73%) and discards the others. What structural change would prevent loss of source attribution and conflicting value handling?",
+    "options": [
+      "Consolidate all research findings into a single database that stores claims alongside metadata, then have the synthesis agent query by claim type rather than by source",
+      "Implement a voting mechanism where multiple sources must agree on a finding before it appears in the final report, suppressing conflicting findings entirely",
+      "Add few-shot examples to the synthesis agent demonstrating how to select the most authoritative source when conflicts exist",
+      "Require subagents to output structured claim-source mappings (source name, publication date, excerpt) that the synthesis agent must preserve and annotate in the final report, explicitly noting when credible sources disagree and why (e.g., different collection dates, different populations)"
+    ],
+    "correct": [
+      3
+    ],
+    "explanation": "Requiring subagents to output structured claim-source mappings (correct answer) directly follows the guide's principle: 'Requiring subagents to output structured claim-source mappings (source URLs, document names, relevant excerpts) that downstream agents preserve through synthesis.' The current system loses source attribution by selecting one value. Option 1 enables the synthesis agent to: (1) preserve which sources reported what, (2) include publication dates to explain temporal differences, and (3) structure the report with 'Structuring reports with explicit sections distinguishing well-established findings from contested ones.' Option 2 (database consolidation) doesn't solve the attribution problem. Option 3 (voting/suppression) hides legitimate findings from credible sources with different collection periods. Option 4 (few-shot examples) doesn't create the structured metadata needed to preserve claims and sources."
+  },
+  {
+    "id": "d5-12",
+    "domain": 5,
+    "task": "5.6",
+    "scenario": "Structured Data Extraction",
+    "question": "Your extraction system processes product warranty documentation from multiple manufacturers. Document Type A uses a table format: \"Warranty Duration | Coverage Type | Exclusions\"; Document Type B uses narrative paragraphs (\"Coverage includes...\"); Document Type C embeds warranty info in FAQ sections. One product has conflicting warranty periods stated as \"2 years\" in the narrative section but \"24 months\" in a table footnote (actually the same period expressed differently). Another product lists \"water damage excluded\" in one table but says \"water damage covered under extended warranty\" in an FAQ, creating genuine ambiguity. Your current extraction system conflates these cases, sometimes picking the first value found. What structured output design would properly handle both document format variety and genuine ambiguity?",
+    "options": [
+      "Add a source_format field (table/narrative/faq) to each extracted value so the synthesis layer can deduplicate equivalent values expressed in different formats",
+      "Require the model to extract all stated values for any field that has variations, then implement post-processing that automatically selects the most specific or most recent value",
+      "Design extraction schemas with conflict_detected boolean fields for ambiguous cases, and render financial/coverage data as tables (for precision) versus textual content as prose, noting which content type each field originated from",
+      "Implement separate extraction pipelines for each document type (Type A/B/C) so each can be optimized for its specific format"
+    ],
+    "correct": [
+      2
+    ],
+    "explanation": "Designing schemas with conflict_detected fields and format-aware rendering (correct answer) follows the guide's principles: 'Designing self-correction validation flows: extracting... adding \"conflict_detected\" booleans for inconsistent source data' and 'Rendering different content types appropriately in synthesis outputs--financial data as tables, news as prose, technical findings as structured lists--rather than converting everything to a uniform format.' The 2 years vs 24 months case is resolved by format awareness (both are the same), while the water damage ambiguity requires the conflict_detected flag to alert downstream consumers. Option 2 (source_format field) only handles format deduplication, not the genuine ambiguity. Option 3 (multiple values + auto-selection) loses the ambiguity information downstream. Option 4 (separate pipelines) adds complexity without addressing the core need to preserve both format variety and ambiguity signals."
+  }
+]

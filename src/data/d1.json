@@ -1,0 +1,312 @@
+[
+  {
+    "id": "d1-01",
+    "domain": 1,
+    "task": "1.1",
+    "scenario": "Customer Support Resolution Agent",
+    "question": "Your agent successfully processes the first customer request and calls lookup_order. However, when you inspect the message history, you notice the tool result isn't included before the next API call. The agent repeats the same lookup_order call instead of moving to the next step. What's the most likely issue with your agentic loop implementation?",
+    "options": [
+      "The tool result isn't being appended to the conversation history before the next iteration",
+      "The stop_reason check is using 'end_turn' instead of 'tool_use' to determine loop continuation",
+      "The system prompt needs to include explicit instructions that tool results must be processed",
+      "The max_tokens parameter is too low, causing the model to stop before reading tool results"
+    ],
+    "correct": [
+      0
+    ],
+    "explanation": "In an agentic loop, tool results must be explicitly appended to the conversation history before the next iteration so the model can reason about the results and determine the next action. Without this, the model lacks the context needed to proceed. Option 2 misunderstands stop_reason—'tool_use' means the model called a tool (continue looping), 'end_turn' means done (stop). Option 3 relies on prompt-based compliance which is unreliable for deterministic control flow. Option 4 addresses token limits, not result propagation."
+  },
+  {
+    "id": "d1-02",
+    "domain": 1,
+    "task": "1.1",
+    "scenario": "Code Generation with Claude Code",
+    "question": "You're implementing an agentic loop for code analysis that checks stop_reason after each API call. Your current loop continues when stop_reason is 'end_turn' and terminates when it's 'tool_use'. The agent repeatedly calls the same tool without ever stopping. What's the fundamental error in your loop control?",
+    "options": [
+      "You need to add a maximum iteration count to prevent infinite loops",
+      "You've inverted the stop_reason logic—continue on 'tool_use' and terminate on 'end_turn'",
+      "The tool descriptions are ambiguous, causing the model to misinterpret which tools to call",
+      "The agent needs explicit instructions in the system prompt to know when to stop calling tools"
+    ],
+    "correct": [
+      1
+    ],
+    "explanation": "The stop_reason values are: 'tool_use' means the model called a tool, so continue looping; 'end_turn' means the model finished and has a response, so terminate. Your implementation has these reversed. Option 1 adds a band-aid to an incorrect loop—proper stop_reason checking eliminates the need for arbitrary caps. Option 3 is a distractor; tool ambiguity wouldn't cause the wrong stop_reason handling. Option 4 relies on prompt instructions which cannot enforce deterministic control flow."
+  },
+  {
+    "id": "d1-03",
+    "domain": 1,
+    "task": "1.1",
+    "scenario": "Developer Productivity with Claude",
+    "question": "Your agentic loop correctly implements stop_reason checking and appends tool results to history. However, the agent frequently makes decisions that ignore recent tool outputs, sometimes calling tools multiple times with identical inputs despite receiving clear results the first time. What's the most likely cause?",
+    "options": [
+      "The agent needs explicit step-by-step instructions in the system prompt telling it when to use each tool",
+      "Tool results need to include explicit markers like 'RESULT_END' so the model knows where tool output ends",
+      "Tool results are being appended in the wrong format—the model can't parse them correctly",
+      "The model-driven decision-making is working as designed; the agent should be retrying failed tool calls when reasoning suggests it"
+    ],
+    "correct": [
+      2
+    ],
+    "explanation": "If the model can't parse tool results due to formatting issues, it won't properly incorporate them into its reasoning, causing repeated or erratic tool calls. The solution is to ensure results are in a format the model can understand. Option 1 conflicts with the principle that agents should use model-driven decision-making, not rigid procedural instructions. Option 2 invents a mechanism the API doesn't require—the model handles result parsing without special markers. Option 4 misses that identical repeated calls despite clear results is abnormal."
+  },
+  {
+    "id": "d1-04",
+    "domain": 1,
+    "task": "1.2",
+    "scenario": "Multi-Agent Research System",
+    "question": "Your coordinator delegates a research request to three subagents in parallel. The web search subagent completes and returns results, but the coordinator immediately attempts to invoke synthesis without waiting for the document analysis subagent to complete. What architectural principle should guide your fix?",
+    "options": [
+      "The coordinator must wait for all required subagents to complete before aggregating results and delegating to synthesis",
+      "Reduce the number of subagents to minimize coordination complexity and potential race conditions",
+      "Implement automatic retry logic so synthesis can re-request missing results from analysis on demand",
+      "Have synthesis incrementally process results as each subagent completes rather than waiting for all"
+    ],
+    "correct": [
+      0
+    ],
+    "explanation": "The hub-and-spoke model requires the coordinator to manage all inter-subagent communication and synchronization. Synthesis needs complete findings from all sources to produce coherent output. Invoking it early with partial results violates this pattern. Option 1 contradicts hub-and-spoke where all communication flows through the coordinator, not directly between subagents. Option 2 reduces capability rather than fixing the architectural issue. Option 3 relies on synthesis correctly identifying what's missing, which is unreliable."
+  },
+  {
+    "id": "d1-05",
+    "domain": 1,
+    "task": "1.2",
+    "scenario": "Multi-Agent Research System",
+    "question": "Your research system's coordinator analyzes a query about renewable energy and decides to delegate to a web search subagent. However, the coordinator doesn't examine what searches the subagent should perform—it just passes the entire query. The subagent returns 200+ documents covering everything from solar panels to ocean tidal energy to political policy. Synthesis then struggles to organize this overwhelming volume. What's the root coordination problem?",
+    "options": [
+      "The coordinator should decompose the broad topic into specific focused research subtasks before delegating to subagents",
+      "The coordinator should invoke multiple specialized subagents sequentially rather than delegating everything to one searcher",
+      "The web search tool needs filtering capabilities to limit results returned per query",
+      "The synthesis agent needs more sophisticated result categorization logic to handle diverse findings"
+    ],
+    "correct": [
+      0
+    ],
+    "explanation": "Effective coordination includes task decomposition—breaking 'renewable energy' into focused subtasks (e.g., 'solar efficiency improvements,' 'policy barriers to adoption') before delegating. This guidance prevents subagents from trying to handle overly broad scope. Option 2 doesn't address the real issue; sequential invocation won't fix poor decomposition. Option 3 addresses symptoms, not the root cause in the coordinator's delegation strategy. Option 4 shifts burden to synthesis when the problem originates in the coordinator's lack of decomposition."
+  },
+  {
+    "id": "d1-06",
+    "domain": 1,
+    "task": "1.2",
+    "scenario": "Multi-Agent Research System",
+    "question": "During testing, your synthesis subagent identifies gaps in the research (e.g., \"Nordic policy section is missing\"). Instead of returning this gap to the coordinator with targeted guidance, synthesis attempts to invoke web search directly to fill the gap. What coordination pattern is this violating, and what's the correct fix? (Select TWO.)",
+    "options": [
+      "This violates hub-and-spoke by having subagents communicate directly instead of through the coordinator",
+      "The coordinator should detect synthesis output, parse the gaps, re-invoke search with targeted queries, then re-invoke synthesis",
+      "Synthesis should have full access to the web search tool so it can independently resolve gaps without coordinator delays",
+      "The synthesis agent should include iterative refinement logic that automatically generates follow-up research tasks",
+      "The coordinator should implement a loop that evaluates synthesis output for gaps and re-delegates until coverage is sufficient"
+    ],
+    "correct": [
+      0,
+      4
+    ],
+    "explanation": "Option 1 correctly identifies the violation: hub-and-spoke requires all communication through the coordinator. Options 2 and 5 are both correct approaches: the coordinator orchestrates re-delegation when gaps are detected (2 names the action sequence; 5 frames it as a loop). Option 3 violates separation of concerns and the coordinator's role in deciding what research to pursue. Option 4 misunderstands the coordinator's responsibility—the agent shouldn't autonomously decide what to research; the coordinator decides based on synthesis output."
+  },
+  {
+    "id": "d1-07",
+    "domain": 1,
+    "task": "1.3",
+    "scenario": "Developer Productivity with Claude",
+    "question": "You're building a coordinator agent that spawns subagents using the Task tool. Your coordinator successfully creates a 'WebSearchAgent' subagent but the subagent invocation fails with an error stating the coordinator lacks permission. What configuration is required in the coordinator to enable subagent spawning?",
+    "options": [
+      "Subagents can only be spawned from a specialized 'orchestrator' agent type, not from regular agents",
+      "The coordinator needs a special role configuration like 'coordinator_role: true' in its AgentDefinition",
+      "The coordinator's allowedTools must include 'Task' to enable subagent invocation",
+      "The coordinator must include explicit delegation authorization in its system prompt for each subagent type"
+    ],
+    "correct": [
+      2
+    ],
+    "explanation": "The Task tool is the mechanism for spawning subagents, and it must be explicitly included in the coordinator's allowedTools configuration. Without this, the agent cannot invoke the Task tool. Option 1 is false—any agent can spawn subagents if Task is in allowedTools. Option 2 references a non-existent configuration mechanism. Option 4 relies on prompt instructions which cannot enforce tool access—this is a configuration issue, not a prompt issue."
+  },
+  {
+    "id": "d1-08",
+    "domain": 1,
+    "task": "1.3",
+    "scenario": "Code Generation with Claude Code",
+    "question": "Your coordinator spawns a 'CodeAnalysisAgent' subagent and passes it the current git diff as context. The subagent completes its analysis, but you notice it references files not in the diff and makes assumptions about the broader codebase that weren't included in your prompt. The subagent seems to be relying on context from previous coordinator conversations. What's the correct principle for context passing?",
+    "options": [
+      "Include only the minimal diff in subagent prompts; subagents should infer missing context from their own prior experience",
+      "Use a shared session context object so all subagents access the same information base automatically",
+      "Pass coordinator conversation history directly to subagents so they have continuity with prior analysis",
+      "Subagent context must be explicitly provided in the prompt—subagents do not automatically inherit parent context or share memory"
+    ],
+    "correct": [
+      3
+    ],
+    "explanation": "Subagents operate with isolated context—they don't automatically inherit the coordinator's conversation history or memory between invocations. You must explicitly pass all needed context in the subagent's prompt. Option 1 relies on inference which is unreliable for critical analysis decisions. Option 2 describes shared state that doesn't exist in the Agent SDK architecture—each subagent has isolated context. Option 3 contradicts this: passing history directly can cause confusion about which conversation is which."
+  },
+  {
+    "id": "d1-09",
+    "domain": 1,
+    "task": "1.3",
+    "scenario": "Multi-Agent Research System",
+    "question": "You're designing a research system where multiple subagents investigate different regions' renewable energy policies. You want them to run in parallel to minimize latency. Should you emit multiple Task tool calls across separate coordinator turns, or emit them in a single coordinator response?",
+    "options": [
+      "Sequential emission is safer; parallel execution risks race conditions in result aggregation",
+      "Use a background job system external to the agent framework for true parallelism; the Agent SDK doesn't support concurrency",
+      "Emit them across separate turns; this provides better error handling and allows you to adjust subagent behavior based on earlier results",
+      "Emit multiple Task calls in a single response to spawn parallel subagents—this runs them concurrently rather than sequentially"
+    ],
+    "correct": [
+      3
+    ],
+    "explanation": "When multiple subagent invocations are independent, emitting multiple Task calls in a single coordinator response runs them in parallel, reducing latency. Sequential emission across turns runs subagents one-by-one. Option 1 confuses subagent execution with result aggregation; the coordinator serializes aggregation after parallel subagents complete. Option 2 is false—emitting parallel Task calls is the intended pattern for concurrent subagent execution within the Agent SDK. Option 3 sacrifices parallelism without a clear benefit."
+  },
+  {
+    "id": "d1-10",
+    "domain": 1,
+    "task": "1.4",
+    "scenario": "Customer Support Resolution Agent",
+    "question": "Your customer support agent must verify customer identity before processing refunds. Currently, your system prompt instructs: 'Always verify customer identity using get_customer before calling process_refund.' In testing, the agent occasionally bypasses this and calls process_refund with customer name only. Why is this approach insufficient for critical business logic?",
+    "options": [
+      "The agent needs additional few-shot examples showing the correct sequence, not just textual instructions",
+      "Prompt instructions provide probabilistic compliance only; programmatic prerequisites guarantee deterministic enforcement",
+      "The issue is poor tool descriptions; get_customer needs more detailed documentation of its importance",
+      "Customer identity verification should be implemented as a preprocessing step external to the agent"
+    ],
+    "correct": [
+      1
+    ],
+    "explanation": "Prompt-based enforcement (relying on instructions) has a non-zero failure rate due to the probabilistic nature of LLMs. When financial consequences are at stake, programmatic enforcement—such as a hook that blocks process_refund until get_customer has completed—provides deterministic guarantees. Option 1 suggests more examples, which doesn't eliminate the fundamental probabilistic nature of prompts. Option 3 focuses on descriptions when the problem is enforcement, not selection. Option 4 moves the issue outside the agent, losing the benefits of agent-driven decision-making."
+  },
+  {
+    "id": "d1-11",
+    "domain": 1,
+    "task": "1.4",
+    "scenario": "Customer Support Resolution Agent",
+    "question": "A customer contacts support with three distinct issues: a billing dispute, a damaged item return request, and a shipping delay. Your agent receives this multi-concern message and attempts to handle all three sequentially in a single tool-calling loop. The output is confused and contradictory. What decomposition strategy should you implement?",
+    "options": [
+      "Have the agent ask the customer to submit separate requests for each issue to ensure focused handling",
+      "Decompose multi-concern requests into distinct items, then investigate each in parallel using shared context before synthesizing a unified resolution",
+      "Implement a concern classifier that analyzes the request and routes each issue type to a different specialized subagent",
+      "Process concerns sequentially but use separate tool-calling loops for each to maintain clear state separation"
+    ],
+    "correct": [
+      1
+    ],
+    "explanation": "The correct pattern is to decompose the multi-concern request into distinct items (billing dispute, return, shipping) and investigate each in parallel before synthesizing a final unified response. This prevents context confusion and enables parallel processing. Option 1 shifts burden to customers without improving handling. Option 3 over-engineers a solution when decomposition and parallel investigation within a single agent works effectively. Option 4's sequential separate loops still process serially, losing efficiency."
+  },
+  {
+    "id": "d1-12",
+    "domain": 1,
+    "task": "1.4",
+    "scenario": "Customer Support Resolution Agent",
+    "question": "When escalating a complex refund case to a human agent, your system currently passes the entire conversation history (50+ messages). The human agent reports confusion about what the core issue is and spends 10 minutes reviewing context. How should you structure the handoff to human agents?",
+    "options": [
+      "Have the agent ask the customer to repeat their issue from scratch so the human agent receives a fresh, concise statement",
+      "Implement a summary tool that compresses all conversation turns into 2-3 sentences for human readability",
+      "Compile structured handoff summaries including customer ID, root cause analysis, refund amount, and recommended action—not the full transcript",
+      "Extract key statistics from conversation history to reduce token count but maintain the complete message flow"
+    ],
+    "correct": [
+      2
+    ],
+    "explanation": "Structured handoff summaries provide human agents the critical facts (customer ID, root cause, amount, recommendation) they need to act immediately, without forcing them to parse the entire transcript. This is the standard escalation pattern. Option 1 creates poor customer experience by making them repeat themselves. Option 2 loses too much structured information for accurate resolution. Option 3 still requires transcript review, defeating the purpose."
+  },
+  {
+    "id": "d1-13",
+    "domain": 1,
+    "task": "1.5",
+    "scenario": "Multi-Agent Research System",
+    "question": "Your research subagents return findings in inconsistent formats: the web search agent returns timestamps as Unix seconds, the document analysis agent uses ISO 8601 format, and the synthesis agent expects human-readable dates (e.g., 'March 2024'). The synthesis agent produces incorrect outputs because it can't reconcile these date formats. Which Agent SDK pattern should you implement?",
+    "options": [
+      "Create a separate formatting agent that transforms all subagent outputs to a canonical format before synthesis sees them",
+      "Implement a PostToolUse hook to normalize heterogeneous data formats before the model processes results",
+      "Add explicit date format requirements to each subagent's system prompt so they output matching formats",
+      "Modify the synthesis agent's prompt to handle date format conversions internally"
+    ],
+    "correct": [
+      1
+    ],
+    "explanation": "PostToolUse hooks intercept tool results after execution and before model processing, making them ideal for data normalization. This ensures the model always receives consistent formats regardless of tool sources. Option 1 adds unnecessary infrastructure when hooks solve this elegantly. Option 2 is inefficient and error-prone—leaving the model to do format conversions. Option 3 relies on prompt compliance which is unreliable for deterministic format conversion."
+  },
+  {
+    "id": "d1-14",
+    "domain": 1,
+    "task": "1.5",
+    "scenario": "Customer Support Resolution Agent",
+    "question": "Your policy requires that refunds above $500 must be approved by a supervisor before processing. You want to guarantee this policy is enforced deterministically, with no exceptions due to model reasoning. Which approach combines Agent SDK hooks with appropriate workflow management?",
+    "options": [
+      "Add a rule to the system prompt stating that high-value refunds require escalation and include few-shot examples",
+      "Set tool_choice to force the agent to call a verify_refund tool before process_refund, which internally checks the limit",
+      "Implement a tool call interception hook that blocks process_refund calls exceeding $500 and redirects to an escalation workflow",
+      "Use a separate validation agent that reviews all process_refund calls and rejects high-value ones before they execute"
+    ],
+    "correct": [
+      2
+    ],
+    "explanation": "A tool call interception hook provides deterministic enforcement—it catches policy-violating actions before execution and redirects to appropriate workflows. This guarantees compliance regardless of model reasoning. Option 1 relies on probabilistic prompt-based compliance. Option 2 uses tool_choice for something it's not designed for (it controls tool selection, not call parameters). Option 4 requires a separate agent, adding complexity when a hook solves this directly."
+  },
+  {
+    "id": "d1-15",
+    "domain": 1,
+    "task": "1.6",
+    "scenario": "Claude Code for Continuous Integration",
+    "question": "You need to review a complex pull request that modifies 50 files—both modifying application code and completely rewriting test utilities used by that code. A single-pass review of all 50 files produces inconsistent, contradictory feedback. Should you use a prompt chaining approach or dynamic decomposition?",
+    "options": [
+      "Use prompt chaining: split into sequential fixed passes—first a detailed per-file local analysis pass, then a separate cross-file integration pass",
+      "Neither approach helps—split large PRs into smaller submissions before review",
+      "Use dynamic decomposition: analyze files, identify dependencies, then dynamically generate follow-up tasks based on what's discovered",
+      "Both approaches are equivalent; choose based on implementation preference"
+    ],
+    "correct": [
+      0
+    ],
+    "explanation": "This scenario has a predictable structure: local issues require file-level analysis, cross-file concerns require separate integration analysis. Prompt chaining (fixed sequential passes) is appropriate here. Dynamic decomposition is better for open-ended investigation where the next step depends on discoveries. Option 2 avoids the actual problem; reviewing 50-file PRs is valid, it just requires the right decomposition strategy. Option 4 is false—the approaches differ significantly."
+  },
+  {
+    "id": "d1-16",
+    "domain": 1,
+    "task": "1.6",
+    "scenario": "Developer Productivity with Claude",
+    "question": "You're automating test generation for a legacy codebase. You don't know in advance which areas need testing—that depends on code structure, dependency analysis, and identifying high-impact areas. You also need to adapt the test strategy based on what you discover about the codebase. Is this better suited for prompt chaining or dynamic adaptive decomposition?",
+    "options": [
+      "Prompt chaining: use fixed sequential passes (structure analysis, then dependency mapping, then test planning) regardless of intermediate findings",
+      "This is too complex for agent-based approaches; write a script that handles predictable dependency patterns instead",
+      "Implement both—run prompt chaining first, then supplement with dynamic decomposition if initial results are incomplete",
+      "Dynamic adaptive decomposition: map structure first, identify high-impact areas, then create a prioritized plan that adapts as dependencies are discovered"
+    ],
+    "correct": [
+      3
+    ],
+    "explanation": "When task requirements depend on intermediate discoveries (dependencies, code patterns, impact analysis), dynamic adaptive decomposition is appropriate. The agent generates subtasks based on findings from each step, not pre-planned steps. Option 1 assumes the sequence and decision points are known upfront, which doesn't match this scenario. Option 3 adds unnecessary complexity; choose one pattern. Option 4 underestimates agent capabilities for this well-defined domain."
+  },
+  {
+    "id": "d1-17",
+    "domain": 1,
+    "task": "1.7",
+    "scenario": "Code Generation with Claude Code",
+    "question": "Your team is analyzing a large codebase across multiple work sessions. On Day 1, an agent explores the code and saves key findings. On Day 3, you want to continue the analysis from that prior exploration. Should you resume the prior session with --resume <session-name>, or start a new session with injected findings? (Select TWO.)",
+    "options": [
+      "Use --resume when prior tool results are still valid (code hasn't changed)",
+      "Start fresh with injected summaries when prior results have become stale or code has been modified",
+      "Always use --resume; it's more reliable and maintains continuity",
+      "When resuming, inform the agent about specific file changes discovered since the last session for targeted re-analysis",
+      "Resumption requires the agent to re-explore the entire codebase since context is inherently stale"
+    ],
+    "correct": [
+      0,
+      3
+    ],
+    "explanation": "Option 1 is correct: when prior tool results remain valid, resumption preserves context efficiently. Option 4 is correct: when resuming after code modifications, you must inform the agent about specific changes so it can re-analyze targeted areas rather than exploring everything again. Option 2 applies when results are stale, not when using resumption. Option 3 is too absolute—resumption only works when prior results are mostly valid. Option 5 is false—resumption doesn't require full re-exploration if you target specific changes."
+  },
+  {
+    "id": "d1-18",
+    "domain": 1,
+    "task": "1.7",
+    "scenario": "Developer Productivity with Claude",
+    "question": "You're exploring two different testing strategies for the same codebase. You start a session, analyze the codebase, and decide to evaluate 'Strategy A' (extensive unit tests). Midway through implementation, you want to compare against 'Strategy B' (integration test focus) without losing your 'Strategy A' exploration. What session management feature should you use?",
+    "options": [
+      "Create a new agent with the original analysis embedded in its system prompt, maintaining independence",
+      "Use --resume with a different session name to start a new named session with the codebase analysis context",
+      "Use /compact to reduce context, then continue in the same session while implementing Strategy B",
+      "Use fork_session to create an independent branch from your shared analysis baseline to explore the divergent approach"
+    ],
+    "correct": [
+      3
+    ],
+    "explanation": "fork_session creates independent branches from a shared baseline, perfect for comparing divergent approaches (Strategy A vs Strategy 2). Both forks inherit the codebase analysis, enabling fair comparison. Option 1 is a manual workaround when fork_session is designed precisely for this scenario. Option 2 doesn't create a branch—it just starts a separate named session. Option 3 is for context management within a session, not for maintaining parallel exploration branches."
+  }
+]
