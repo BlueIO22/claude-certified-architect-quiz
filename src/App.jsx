@@ -538,6 +538,17 @@ function Quiz({ session, progress, update, blocked, ask, onMenu, onFinish, gloss
     explainRef.current?.scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', block: 'start' })
   }, [reveal])
 
+  // On phones, moving to another question glides back up to its start
+  const prevIdx = useRef(session.idx)
+  useEffect(() => {
+    if (prevIdx.current === session.idx) return
+    prevIdx.current = session.idx
+    if (window.scrollY === 0) return
+    if (!window.matchMedia('(max-width: 600px), (pointer: coarse)').matches) return
+    const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    window.scrollTo({ top: 0, behavior: reduce ? 'auto' : 'smooth' })
+  }, [session.idx])
+
   // which glossary terms to underline where: question → options → explanation (when shown)
   const { allowQ, allowOpts, allowExp, termOrder } = useMemo(() => {
     if (!q || !glossary) return { allowOpts: [], termOrder: [] }
