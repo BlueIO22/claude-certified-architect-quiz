@@ -526,6 +526,17 @@ function Quiz({ session, progress, update, blocked, ask, onMenu, onFinish, gloss
   const [now, setNow] = useState(Date.now())
   const [openTerm, setOpenTerm] = useState(null)
   const touch = useRef(null)
+  const explainRef = useRef(null)
+  const justSubmitted = useRef(false)
+
+  // On phones, after checking an answer, glide down to the explanation + Next button
+  useEffect(() => {
+    if (!justSubmitted.current || !reveal) return
+    justSubmitted.current = false
+    if (!window.matchMedia('(max-width: 600px), (pointer: coarse)').matches) return
+    const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    explainRef.current?.scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', block: 'start' })
+  }, [reveal])
 
   // which glossary terms to underline where: question → options → explanation (when shown)
   const { allowQ, allowOpts, allowExp, termOrder } = useMemo(() => {
@@ -600,6 +611,7 @@ function Quiz({ session, progress, update, blocked, ask, onMenu, onFinish, gloss
   const submit = () => {
     if (!q || sel.length !== need) return
     const correct = sameSet(sel, q.correct)
+    justSubmitted.current = true
     update((p) => {
       p.sessions[p.current].results[id] = { selected: sel, submitted: true, correct }
       record(p, id, sel, correct)
@@ -736,7 +748,7 @@ function Quiz({ session, progress, update, blocked, ask, onMenu, onFinish, gloss
         </ol>
 
         {reveal && (
-          <div className={`explain ${res?.correct ? 'ok' : 'bad'}`}>
+          <div ref={explainRef} className={`explain ${res?.correct ? 'ok' : 'bad'}`}>
             <div className="explain-head">
               {res?.selected?.length
                 ? res.correct

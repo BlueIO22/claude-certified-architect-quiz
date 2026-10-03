@@ -401,3 +401,4 @@ button, .opt, .row-item, .term { touch-action: manipulation; -webkit-tap-highlig
   animation: pop-in .15s ease-out;
 }
 .site-foot .credit { font-size: 13.5px; color: var(--ink); margin-bottom: 8px; }
+.explain { scroll-margin-top: 16px; }
