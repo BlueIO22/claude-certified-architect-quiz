@@ -1,6 +1,6 @@
 import { createContext, useContext, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { QUESTIONS, BY_ID, DOMAINS, TASKS, EXAM_BLUEPRINT, EXAM_MINUTES, HAS_OFFICIAL, SOURCE_URL } from './data'
-import { load, save, emptyProgress, exportJson, shuffle, loadSettings, saveSettings } from './storage'
+import { load, save, emptyProgress, exportJson, parseBackup, shuffle, loadSettings, saveSettings } from './storage'
 import { tokenize } from './lib/code'
 import { GLOSSARY_RE, lookup } from './data/glossary'
 
@@ -201,6 +201,28 @@ export default function App() {
 
   const ask = (text, onYes) => setConfirm({ text, onYes })
 
+  const [notice, setNotice] = useState(null)
+  useEffect(() => {
+    if (!notice) return
+    const t = setTimeout(() => setNotice(null), 3500)
+    return () => clearTimeout(t)
+  }, [notice])
+
+  const importFile = async (file) => {
+    if (!file) return
+    try {
+      const { progress: incoming, exportedAt } = parseBackup(await file.text())
+      const n = Object.keys(incoming.answers).length
+      const when = exportedAt ? ` from ${new Date(exportedAt).toLocaleString()}` : ''
+      ask(`Replace your current progress with this backup${when}? (${n} answered questions)`, () => {
+        setProgress(incoming)
+        setNotice('Progress imported')
+      })
+    } catch (err) {
+      setNotice(err.message)
+    }
+  }
+
   // global keys: help + confirm dialog
   useEffect(() => {
     const onKey = (e) => {
@@ -301,17 +323,27 @@ export default function App() {
             onMissed={() => startSession('missed', true)}
           />
         )}
-        {screen === 'stats' && <Stats progress={progress} blocked={blocked} onMenu={() => setScreen('menu')} />}
+        {screen === 'stats' && (
+          <Stats progress={progress} blocked={blocked} onMenu={() => setScreen('menu')} onImport={importFile} />
+        )}
 
         <footer className="site-foot">
+          <div className="credit">
+            Developed by{' '}
+            <a href="https://marius-portifolio.vercel.app/" target="_blank" rel="noreferrer">
+              Marius Sørenes
+            </a>
+          </div>
           Independent study tool — not affiliated with or endorsed by Anthropic. Topics follow the official{' '}
           <a href={SOURCE_URL} target="_blank" rel="noreferrer">
             Claude Certified Architect – Foundations exam guide
           </a>
-          ; practice questions are original and unofficial.
+          ; practice questions are original and unofficial. Your progress is stored only in this browser — nothing is
+          sent to a server.
         </footer>
       </div>
 
+      {notice && <div className="toast">{notice}</div>}
       {help && <Help onClose={() => setHelp(false)} />}
       {showSettings && (
         <Settings settings={settings} setSettings={setSettings} onClose={() => setShowSettings(false)} />
@@ -838,7 +870,8 @@ function Results({ session, blocked, onMenu, onReview, onMissed }) {
 }
 
 // ---------- Stats ----------
-function Stats({ progress, blocked, onMenu }) {
+function Stats({ progress, blocked, onMenu, onImport }) {
+  const fileRef = useRef(null)
   const data = useMemo(() => {
     const dom = {}
     const task = {}
@@ -868,6 +901,7 @@ function Stats({ progress, blocked, onMenu }) {
   useKeys((e) => {
     if (e.key === 'Escape' || e.key === 'Enter') return onMenu()
     if (e.key === 'e') return exportJson(progress)
+    if (e.key === 'i') return fileRef.current?.click()
     return false
   }, blocked)
 
@@ -924,6 +958,19 @@ function Stats({ progress, blocked, onMenu }) {
         <button className="btn" onClick={() => exportJson(progress)}>
           Export progress <Kbd>E</Kbd>
         </button>
+        <button className="btn" onClick={() => fileRef.current?.click()}>
+          Import progress <Kbd>I</Kbd>
+        </button>
+        <input
+          ref={fileRef}
+          type="file"
+          accept="application/json,.json"
+          hidden
+          onChange={(e) => {
+            onImport(e.target.files?.[0])
+            e.target.value = ''
+          }}
+        />
         <button className="btn primary" onClick={onMenu}>
           Menu <Kbd>↵</Kbd>
         </button>
@@ -960,7 +1007,7 @@ function Help({ onClose }) {
       ],
     ],
     ['Settings panel', [['T', 'Cycle theme: system / light / dark'], ['G', 'Toggle glossary']]],
-    ['Results & stats', [['W', 'Review answers'], ['M', 'Drill missed'], ['E', 'Export progress']]],
+    ['Results & stats', [['W', 'Review answers'], ['M', 'Drill missed'], ['E', 'Export progress'], ['I', 'Import progress backup']]],
   ]
   return (
     <div className="overlay" onClick={onClose}>

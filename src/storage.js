@@ -45,12 +45,31 @@ export function saveSettings(settings) {
 }
 
 export function exportJson(progress) {
-  const blob = new Blob([JSON.stringify(progress, null, 2)], { type: 'application/json' })
+  const payload = { app: 'ccarf-quiz', version: 1, exportedAt: new Date().toISOString(), ...progress }
+  const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' })
   const a = document.createElement('a')
   a.href = URL.createObjectURL(blob)
   a.download = `ccarf-progress-${new Date().toISOString().slice(0, 10)}.json`
   a.click()
   URL.revokeObjectURL(a.href)
+}
+
+// Parse + validate a backup file's text. Returns { progress, exportedAt } or throws a readable Error.
+export function parseBackup(text) {
+  let data
+  try {
+    data = JSON.parse(text)
+  } catch {
+    throw new Error('That file is not valid JSON.')
+  }
+  const isObj = (v) => v && typeof v === 'object' && !Array.isArray(v)
+  if (!isObj(data) || !isObj(data.answers) || !isObj(data.sessions)) {
+    throw new Error('That file does not look like a CCAR-F progress backup.')
+  }
+  const { app, version, exportedAt, ...rest } = data
+  const progress = { ...emptyProgress(), ...rest, flags: isObj(rest.flags) ? rest.flags : {} }
+  if (progress.current && !progress.sessions[progress.current]) progress.current = null
+  return { progress, exportedAt: exportedAt || null }
 }
 
 // Seeded RNG helpers so shuffles are stable across reloads

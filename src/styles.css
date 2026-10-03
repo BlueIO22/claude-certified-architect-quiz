@@ -391,3 +391,13 @@ button, .opt, .row-item, .term { touch-action: manipulation; -webkit-tap-highlig
 }
 .site-foot a { color: var(--accent); text-decoration: none; }
 .site-foot a:hover { text-decoration: underline; }
+
+/* toast */
+.toast {
+  position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%); z-index: 40;
+  max-width: calc(100vw - 32px);
+  background: var(--ink); color: var(--bg);
+  padding: 10px 16px; border-radius: 10px; font-size: 14px; font-weight: 500;
+  animation: pop-in .15s ease-out;
+}
+.site-foot .credit { font-size: 13.5px; color: var(--ink); margin-bottom: 8px; }
