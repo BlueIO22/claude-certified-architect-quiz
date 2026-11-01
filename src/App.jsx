@@ -13,7 +13,7 @@ const fmtTime = (ms) => {
 }
 
 const titleFor = (key) =>
-  ({ all: 'Full question bank', official: 'Official samples', missed: 'Review missed', flagged: 'Flagged', exam: 'Exam simulation' })[key] ??
+  ({ all: 'Full question bank', random: 'Random 20', official: 'Official samples', missed: 'Review missed', flagged: 'Flagged', exam: 'Exam simulation' })[key] ??
   `Domain ${key.slice(1)} · ${DOMAINS[key.slice(1)]?.name}`
 
 // ---------- session builders ----------
@@ -24,6 +24,8 @@ function buildSession(key, progress) {
   switch (key) {
     case 'all':
       return { ...base, title: 'Full question bank', order: shuffle(ids(() => true), seed) }
+    case 'random':
+      return { ...base, title: 'Random 20', order: shuffle(ids(() => true), seed).slice(0, 20) }
     case 'official':
       return { ...base, title: 'Official samples', order: ids((q) => q.official) }
     case 'missed':
@@ -405,6 +407,7 @@ function Menu({ progress, blocked, onStart, onStats, onHelp, onReset }) {
       title: 'Practice',
       items: [
         { k: '0', label: 'Full question bank', sub: `${QUESTIONS.length} questions, shuffled`, info: sessInfo('all'), act: (f) => onStart('all', f), hot: '0' },
+        { k: 'Q', label: 'Random 20', sub: '20 random questions from all domains', info: sessInfo('random'), act: (f) => onStart('random', f), hot: 'q' },
         HAS_OFFICIAL && { k: 'O', label: 'Official sample questions', sub: 'The 12 from the exam guide', info: sessInfo('official'), act: (f) => onStart('official', f), hot: 'o' },
       ].filter(Boolean),
     },
@@ -1011,7 +1014,7 @@ function Help({ onClose }) {
       [
         ['↑ ↓', 'Move'],
         ['↵', 'Open / continue where you left off'],
-        ['0–5  O  M  G  X  S', 'Jump to a mode'],
+        ['0–5  Q  O  M  G  X  S', 'Jump to a mode'],
         ['Shift + key', 'Restart that mode fresh'],
         ['Shift + R', 'Reset all progress'],
       ],
