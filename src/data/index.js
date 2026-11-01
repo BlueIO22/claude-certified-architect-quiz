@@ -52,3 +52,6 @@ export const TASKS = {
 // Exam blueprint: 60 items weighted by domain
 export const EXAM_BLUEPRINT = { 1: 16, 2: 11, 3: 12, 4: 12, 5: 9 }
 export const EXAM_MINUTES = 120
+
+// Random 20: exam weights scaled to 20 items
+export const RANDOM_BLUEPRINT = { 1: 5, 2: 4, 3: 4, 4: 4, 5: 3 }

@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
-import { QUESTIONS, BY_ID, DOMAINS, TASKS, EXAM_BLUEPRINT, EXAM_MINUTES, HAS_OFFICIAL, SOURCE_URL } from './data'
+import { QUESTIONS, BY_ID, DOMAINS, TASKS, EXAM_BLUEPRINT, RANDOM_BLUEPRINT, EXAM_MINUTES, HAS_OFFICIAL, SOURCE_URL } from './data'
 import { load, save, emptyProgress, exportJson, parseBackup, shuffle, loadSettings, saveSettings } from './storage'
 import { tokenize } from './lib/code'
 import { GLOSSARY_RE, lookup } from './data/glossary'
@@ -24,8 +24,12 @@ function buildSession(key, progress) {
   switch (key) {
     case 'all':
       return { ...base, title: 'Full question bank', order: shuffle(ids(() => true), seed) }
-    case 'random':
-      return { ...base, title: 'Random 20', order: shuffle(ids(() => true), seed).slice(0, 20) }
+    case 'random': {
+      const order = Object.entries(RANDOM_BLUEPRINT).flatMap(([d, n]) =>
+        shuffle(ids((q) => q.domain === Number(d)), seed + Number(d)).slice(0, n),
+      )
+      return { ...base, title: 'Random 20', order: shuffle(order, seed) }
+    }
     case 'official':
       return { ...base, title: 'Official samples', order: ids((q) => q.official) }
     case 'missed':
@@ -407,7 +411,7 @@ function Menu({ progress, blocked, onStart, onStats, onHelp, onReset }) {
       title: 'Practice',
       items: [
         { k: '0', label: 'Full question bank', sub: `${QUESTIONS.length} questions, shuffled`, info: sessInfo('all'), act: (f) => onStart('all', f), hot: '0' },
-        { k: 'Q', label: 'Random 20', sub: '20 random questions from all domains', info: sessInfo('random'), act: (f) => onStart('random', f), hot: 'q' },
+        { k: 'Q', label: 'Random 20', sub: '20 questions, weighted like the exam', info: sessInfo('random'), act: (f) => onStart('random', f), hot: 'q' },
         HAS_OFFICIAL && { k: 'O', label: 'Official sample questions', sub: 'The 12 from the exam guide', info: sessInfo('official'), act: (f) => onStart('official', f), hot: 'o' },
       ].filter(Boolean),
     },
